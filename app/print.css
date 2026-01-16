@@ -1,0 +1,118 @@
+@media print {
+
+    /* Hide everything by default */
+    body * {
+        visibility: hidden;
+    }
+
+    /* Show only the resume preview container and its children */
+    #resume-preview,
+    #resume-preview * {
+        visibility: visible;
+    }
+
+    /* Reset Body/Html for A4 */
+    html,
+    body {
+        width: 210mm;
+        height: 100%;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        overflow: visible !important;
+    }
+
+    /* Define Page Size - CRITICAL */
+    @page {
+        size: A4;
+        margin: 0mm;
+    }
+
+    /* Position the resume at the very top-left */
+    #resume-preview {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 210mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    /* 
+       CRITICAL: Override the inline `transform: scale(...)` 
+       that LiveResume applies to its root element.
+       Target the direct child div of the ID, or use a broad reset 
+    */
+    #resume-preview>div,
+    #resume-preview .origin-top-left {
+        transform: none !important;
+        width: 210mm !important;
+        min-height: 297mm !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    /* Avoid breaking items across pages */
+    .mb-6,
+    .mb-8,
+    .p-8,
+    .p-10,
+    li,
+    h3 {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    /* Force background colors and graphics */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+
+    /* --- Modern Template Fixed Sidebar --- */
+    [data-template="modern"] {
+        display: block !important;
+        /* Disable flex to handle fixed sidebar */
+    }
+
+    [data-template="modern"]>div:first-child {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        height: 100vh !important;
+        width: 32% !important;
+        z-index: 10;
+        break-inside: avoid;
+    }
+
+    [data-template="modern"]>div:last-child {
+        margin-left: 32% !important;
+        width: 68% !important;
+    }
+
+    /* --- Creative Template Fixed Sidebar --- */
+    [data-template="creative"] {
+        display: block !important;
+    }
+
+    [data-template="creative"]>div:first-child {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        height: 100vh !important;
+        width: 35% !important;
+        z-index: 10;
+        break-inside: avoid;
+    }
+
+    [data-template="creative"]>div:last-child {
+        margin-left: 35% !important;
+        width: 65% !important;
+    }
+
+}

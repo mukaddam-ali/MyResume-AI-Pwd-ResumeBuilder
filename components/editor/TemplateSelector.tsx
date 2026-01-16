@@ -1,0 +1,128 @@
+"use client";
+
+import { useResumeStore } from "@/store/useResumeStore";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Layout, FileText, Code, PenTool, Palette, Sparkles, Crown, Trash2, Shield } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+
+import { cn } from "@/lib/utils";
+
+
+export function TemplateSelector() {
+    const { resumes, activeResumeId, setTemplate, loadExampleData, resetResume, userTier, setBrandingEnabled } = useResumeStore();
+    const activeResume = activeResumeId ? resumes[activeResumeId] : null;
+    const selectedTemplate = activeResume?.selectedTemplate || 'classic';
+    const isBrandingEnabled = activeResume?.isBrandingEnabled ?? true;
+
+    const templates = [
+        { id: 'classic', name: 'Classic', icon: FileText, premium: false },
+        { id: 'modern', name: 'Modern', icon: Layout, premium: false },
+        { id: 'minimalist', name: 'Minimal', icon: PenTool, premium: false },
+        { id: 'github', name: 'GitHub', icon: Code, premium: true },
+        { id: 'creative', name: 'Creative', icon: Palette, premium: true },
+        { id: 'corporate', name: 'Corporate Blue', icon: Sparkles, premium: true },
+        { id: 'executive', name: 'Executive', icon: Crown, premium: true },
+    ] as const;
+
+
+    const handleTemplateChange = (value: string) => {
+        const template = templates.find(t => t.id === value);
+        if (template?.premium && userTier === 'free') {
+            alert("This is a Premium Template. Upgrade to Pro to use it.");
+            return;
+        }
+        setTemplate(value as any);
+    };
+
+
+    return (
+        <div className="flex items-center gap-2 mb-4">
+            <Select
+                value={selectedTemplate}
+                onValueChange={handleTemplateChange}
+            >
+                <SelectTrigger className="w-[180px]">
+                    <SelectValue>
+                        {(() => {
+                            const selected = templates.find(t => t.id === selectedTemplate);
+                            if (!selected) return "Select Template";
+                            return (
+                                <span className="flex items-center gap-2">
+                                    <selected.icon className="w-4 h-4" />
+                                    {selected.name}
+                                </span>
+                            );
+                        })()}
+                    </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                    {templates.map(t => (
+                        <SelectItem key={t.id} value={t.id} disabled={t.premium && userTier === 'free'} className="justify-between">
+                            <span className="flex items-center gap-2">
+                                <t.icon className="w-4 h-4" />
+                                {t.name}
+                            </span>
+                            {t.premium && <Crown className="w-3 h-3 text-yellow-500 ml-2 inline" />}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+
+            {/* Branding Toggle (Pro Feature) */}
+            <div className="ml-4 flex items-center gap-2">
+                <Switch
+                    checked={!isBrandingEnabled}
+                    onCheckedChange={(checked) => {
+                        if (userTier === 'free' && checked) {
+                            alert("Removing branding is a Pro feature. Upgrade to unlock!");
+                            return;
+                        }
+                        setBrandingEnabled(!checked);
+                    }}
+                    disabled={userTier === 'free'}
+                    className={userTier === 'free' ? 'opacity-50 cursor-not-allowed' : ''}
+                />
+                <Label className="text-sm text-muted-foreground flex items-center gap-1">
+                    Remove Branding
+                    {userTier === 'free' && <Crown className="w-3 h-3 text-yellow-500" />}
+                </Label>
+            </div>
+
+            <div className="ml-auto flex gap-2">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                        if (activeResumeId && confirm("Are you sure you want to clear all resume data? This action cannot be undone.")) {
+                            resetResume(activeResumeId);
+                        }
+                    }}
+                    className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    title="Clear All Data"
+                >
+                    <Trash2 className="h-4 w-4" />
+                    Clear All
+                </Button>
+
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={loadExampleData}
+                    className="gap-2"
+                    title="Load Example Data"
+                >
+                    <Sparkles className="h-4 w-4 text-yellow-500" />
+                    Auto-Fill
+                </Button>
+            </div>
+        </div>
+    );
+}

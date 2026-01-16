@@ -1,0 +1,1133 @@
+"use client";
+
+import React from 'react';
+import { ResumeData, useResumeStore } from '@/store/useResumeStore';
+import { cn } from '@/lib/utils';
+import { Mail, Phone, MapPin, Linkedin, Link as LinkIcon, Github, Sparkles } from 'lucide-react';
+import { FormattedText } from '@/components/preview/FormattedText';
+
+interface LiveResumeProps {
+    data: ResumeData;
+    scale?: number;
+}
+
+// Define which fonts are premium
+const PREMIUM_FONTS = ['lora', 'playfair', 'oswald', 'merriweather', 'jetbrains'];
+
+export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
+    const { userTier } = useResumeStore();
+    const { personalInfo, education, experience, projects, skills, selectedTemplate, themeColor: customThemeColor, contentScale = 1, isBrandingEnabled = true, fontFamily: fontId = 'inter', sectionScales } = data;
+
+    // Map font IDs to CSS font family values
+    const FONT_FAMILY_MAP: Record<string, string> = {
+        'inter': 'Inter, sans-serif',
+        'roboto': 'Roboto, sans-serif',
+        'open-sans': '"Open Sans", sans-serif',
+        'lato': 'Lato, sans-serif',
+        'montserrat': 'Montserrat, sans-serif',
+        'poppins': 'Poppins, sans-serif',
+        'source-sans': '"Source Sans 3", sans-serif',
+        'lora': 'Lora, serif',
+        'playfair': 'Playfair Display, serif',
+        'oswald': 'Oswald, sans-serif',
+        'merriweather': 'Merriweather, serif',
+        'jetbrains': 'JetBrains Mono, monospace',
+    };
+
+    // Enforce free tier: fall back to 'inter' if user is free and has a premium font
+    const effectiveFontId = (userTier === 'free' && PREMIUM_FONTS.includes(fontId)) ? 'inter' : fontId;
+    const fontFamily = FONT_FAMILY_MAP[effectiveFontId] || 'Inter, sans-serif';
+
+
+    // Default to a dark navy if no color set
+    const themeColor = customThemeColor || '#112e51';
+
+
+    // --- SECTION RENDERERS (Internal Helpers) ---
+    const renderSectionContent = (sectionId: string) => {
+        switch (sectionId) {
+            case 'education':
+                if (education.length === 0) return null;
+                if (selectedTemplate === 'modern' || selectedTemplate === 'creative') {
+                    // Sidebar style education
+                    if (education.length === 0) return null;
+                    return (
+                        <div key="education" className={cn("mb-6", selectedTemplate === 'creative' ? "text-white" : "")}>
+                            <h3 className={cn("uppercase tracking-widest text-xs font-bold border-b pb-2 mb-4 opacity-80",
+                                selectedTemplate === 'modern' ? "text-white border-white/30" : "border-white/20")}>
+                                Education
+                            </h3>
+                            <div className="space-y-4">
+                                {education.map(edu => (
+                                    <div key={edu.id}>
+                                        <div className="font-bold">{edu.school}</div>
+                                        <div className="text-xs opacity-80">{edu.degree}</div>
+                                        <div className="text-[10px] opacity-60 mt-1">{edu.startDate} – {edu.endDate}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                }
+                if (selectedTemplate === 'minimalist') {
+                    if (education.length === 0) return null;
+                    return (
+                        <div key="education" className="mb-8">
+                            <h3 className="font-bold uppercase tracking-widest text-xs mb-4">Education</h3>
+                            {education.map(edu => (
+                                <div key={edu.id} className="mb-4">
+                                    <div className="font-semibold">{edu.school}</div>
+                                    <div className="italic text-sm text-gray-600">{edu.degree}</div>
+                                    <div className="text-xs text-gray-500 mt-1">{edu.startDate} – {edu.endDate}</div>
+                                </div>
+                            ))}
+                        </div>
+                    );
+                }
+                // Classic / GitHub / Default
+                if (education.length === 0) return null;
+                return selectedTemplate === 'github' ? (
+                    <div key="education" className="mb-8">
+                        <h2 className="text-lg font-bold text-[#c9d1d9] mb-4 border-b border-[#30363d] pb-2 inline-block">// Education</h2>
+                        {education.map(edu => (
+                            <div key={edu.id} className="mb-4">
+                                <div className="text-[#79c0ff] font-bold">{edu.school}</div>
+                                <div className="text-xs text-[#c9d1d9]">{edu.degree}</div>
+                                <div className="text-[#8b949e] text-[10px]">{edu.startDate} - {edu.endDate}</div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div key="education" className="mb-6">
+                        <h3 className="text-lg font-bold uppercase border-b border-gray-200 pb-1 mb-3" style={{ color: themeColor }}>Education</h3>
+                        {education.map(edu => (
+                            <div key={edu.id} className="mb-2">
+                                <div className="font-bold text-sm">{edu.school}</div>
+                                <div className="text-sm">{edu.degree}</div>
+                                <div className="text-xs text-gray-500">{edu.startDate} – {edu.endDate}</div>
+                            </div>
+                        ))}
+                    </div>
+                );
+
+            case 'skills':
+                if (!skills) return null;
+                if (selectedTemplate === 'modern' || selectedTemplate === 'creative') {
+                    // Sidebar style skills
+                    if (!skills) return null;
+                    return (
+                        <div key="skills" className="mb-6">
+                            <h3 className={cn("uppercase tracking-widest text-xs font-bold border-b pb-2 mb-4 opacity-80",
+                                selectedTemplate === 'modern' ? "text-white border-white/30" : "border-white/20")}>
+                                Skills
+                            </h3>
+                            <div className="flex flex-wrap gap-2">
+                                {skills.split(',').map((skill, i) => (
+                                    <span key={i} className={cn("px-2 py-1 rounded text-[10px]",
+                                        selectedTemplate === 'modern' ? "bg-white/10" : "bg-white/20 font-bold")}>
+                                        {skill.trim()}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                }
+                if (selectedTemplate === 'minimalist') {
+                    if (!skills) return null;
+                    return (
+                        <div key="skills" className="mb-8">
+                            <h3 className="font-bold uppercase tracking-widest text-xs mb-4">Skills</h3>
+                            <p className="text-sm leading-relaxed">{skills}</p>
+                        </div>
+                    );
+                }
+                // Classic / GitHub
+                if (!skills) return null;
+                return selectedTemplate === 'github' ? (
+                    <div key="skills" className="mb-8">
+                        <h2 className="text-lg font-bold text-[#c9d1d9] mb-4 border-b border-[#30363d] pb-2 inline-block">// Skills</h2>
+                        <div className="text-[#8b949e] text-xs leading-loose font-mono">
+                            ['{skills.replace(/, /g, "', '")}']
+                        </div>
+                    </div>
+                ) : (
+                    <div key="skills" className="mb-6">
+                        <h3 className="text-lg font-bold uppercase border-b border-gray-200 pb-1 mb-3" style={{ color: themeColor }}>Skills</h3>
+                        <p className="text-sm leading-relaxed">{skills}</p>
+                    </div>
+                );
+
+            case 'experience':
+                if (experience.length === 0) return null;
+                if (selectedTemplate === 'minimalist') {
+                    if (experience.length === 0) return null;
+                    return (
+                        <div key="experience" className="mb-8">
+                            <h3 className="font-bold uppercase tracking-widest text-xs mb-4 border-b border-gray-200 pb-1">Experience</h3>
+                            {experience.map(exp => (
+                                <div key={exp.id} className="mb-6">
+                                    <div className="flex justify-between items-baseline mb-1">
+                                        <h4 className="font-bold text-lg">{exp.company}</h4>
+                                        <span className="text-xs font-mono text-gray-500">{exp.startDate} – {exp.endDate}</span>
+                                    </div>
+                                    <div className="text-sm font-medium italic mb-2 text-gray-700">{exp.role}</div>
+                                    <FormattedText text={exp.description} className="text-sm leading-relaxed text-gray-600 block" />
+                                </div>
+                            ))}
+                        </div>
+                    );
+                }
+                if (selectedTemplate === 'modern') {
+                    if (experience.length === 0) return null;
+                    return (
+                        <div key="experience">
+                            <h3 className="text-sm font-bold uppercase tracking-widest mb-6 border-b pb-2" style={{ color: themeColor, borderColor: '#e5e7eb' }}>Experience</h3>
+                            <div className="space-y-6">
+                                {experience.map(exp => (
+                                    <div key={exp.id} className="relative pl-4 border-l-2 border-gray-100">
+                                        <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full" style={{ backgroundColor: themeColor }}></div>
+                                        <div className="flex justify-between items-baseline mb-1">
+                                            <h4 className="font-bold text-gray-900">{exp.company}</h4>
+                                            <span className="text-xs text-gray-400 font-medium">{exp.startDate} – {exp.endDate}</span>
+                                        </div>
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">{exp.role}</div>
+                                        <FormattedText text={exp.description} className="text-gray-600 text-sm block" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                }
+                if (selectedTemplate === 'creative') {
+                    if (experience.length === 0) return null;
+                    return (
+                        <div key="experience" className="mb-8">
+                            <h3 className="text-xl font-black uppercase mb-6 flex items-center gap-2" style={{ color: themeColor }}>
+                                Experience
+                            </h3>
+                            <div className="space-y-8">
+                                {experience.map(exp => (
+                                    <div key={exp.id} className="relative pl-6">
+                                        <div className="absolute left-0 top-1.5 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: themeColor }}></div>
+                                        <div className="flex justify-between items-baseline mb-1">
+                                            <h4 className="text-lg font-bold text-gray-800">{exp.company}</h4>
+                                            <span className="text-xs text-gray-400 font-bold">{exp.startDate} - {exp.endDate}</span>
+                                        </div>
+                                        <div className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">{exp.role}</div>
+                                        <FormattedText text={exp.description} className="text-gray-600 text-sm block" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                }
+                if (selectedTemplate === 'github') {
+                    if (experience.length === 0) return null;
+                    return (
+                        <div key="experience" className="mb-8">
+                            <h2 className="text-xl font-bold text-[#c9d1d9] mb-4 border-b border-[#30363d] pb-2 inline-block">// Experience</h2>
+                            <div className="space-y-4">
+                                {experience.map(exp => (
+                                    <div key={exp.id} className="border border-[#30363d] bg-[#161b22] p-4 rounded-md">
+                                        <div className="flex justify-between items-baseline mb-1">
+                                            <h3 className="font-bold text-[#79c0ff]">{exp.role}</h3>
+                                            <span className="text-xs text-[#8b949e]">{exp.startDate} - {exp.endDate}</span>
+                                        </div>
+                                        <div className="text-xs text-[#a5d6ff] mb-2">@ {exp.company}</div>
+                                        <FormattedText text={`/* ${exp.description} */`} className="text-[#8b949e] text-xs leading-relaxed opacity-90 block" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                }
+                // Classic
+                if (experience.length === 0) return null;
+                return (
+                    <div key="experience" className="mb-6">
+                        <h3 className="text-lg font-bold uppercase border-b border-gray-200 pb-1 mb-4" style={{ color: themeColor }}>Experience</h3>
+                        <div className="space-y-4">
+                            {experience.map(exp => (
+                                <div key={exp.id}>
+                                    <div className="flex justify-between items-baseline font-bold text-md">
+                                        <span>{exp.company}</span>
+                                        <span className="text-sm font-normal text-gray-600">{exp.startDate} – {exp.endDate}</span>
+                                    </div>
+                                    <div className="italic text-sm mb-1" style={{ color: themeColor }}>{exp.role}</div>
+                                    <FormattedText text={exp.description} className="text-sm text-gray-700 block" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+
+            case 'projects':
+                if (projects.length === 0) return null;
+                if (selectedTemplate === 'minimalist') {
+                    if (projects.length === 0) return null;
+                    return (
+                        <div key="projects" className="mb-8">
+                            <h3 className="font-bold uppercase tracking-widest text-xs mb-4 border-b border-gray-200 pb-1">Projects</h3>
+                            {projects.map(proj => (
+                                <div key={proj.id} className="mb-4">
+                                    <div className="flex justify-between items-baseline">
+                                        <div className="flex items-center gap-2">
+                                            <h4 className="font-bold">{proj.name}</h4>
+                                            {proj.technologies && (
+                                                <span className="text-[10px] font-semibold bg-gray-100 px-1.5 py-0.5 rounded text-gray-700">
+                                                    {proj.technologies}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="text-sm mt-1 text-gray-600">
+                                        <FormattedText text={proj.description} />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    );
+                }
+                if (selectedTemplate === 'modern') {
+                    if (projects.length === 0) return null;
+                    return (
+                        <div key="projects">
+                            <h3 className="text-sm font-bold uppercase tracking-widest mb-6 border-b pb-2" style={{ color: themeColor, borderColor: '#e5e7eb' }}>Projects</h3>
+                            <div className="grid grid-cols-1 gap-4">
+                                {projects.map(proj => (
+                                    <div key={proj.id} className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="font-bold text-gray-900">{proj.name}</h4>
+                                                {proj.technologies && (
+                                                    <span className="text-[10px] bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full font-medium">
+                                                        {proj.technologies}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="text-gray-600 text-sm mb-2">
+                                            <FormattedText text={proj.description} />
+                                        </div>
+                                        {proj.link && (
+                                            <a href={proj.link.startsWith('http') ? proj.link : `https://${proj.link}`} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-blue-600 hover:underline">
+                                                View Project &rarr;
+                                            </a>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                }
+                if (selectedTemplate === 'creative') {
+                    if (projects.length === 0) return null;
+                    return (
+                        <div key="projects" className="mb-8">
+                            <h3 className="text-xl font-black uppercase mb-6 flex items-center gap-2" style={{ color: themeColor }}>
+                                Projects
+                            </h3>
+                            <div className="grid grid-cols-1 gap-4">
+                                {projects.map(proj => (
+                                    <div key={proj.id} className="bg-gray-50 p-4 rounded-lg">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="font-bold text-gray-800">{proj.name}</h4>
+                                                {proj.technologies && (
+                                                    <span className="text-[10px] bg-white border border-gray-200 px-2 py-0.5 rounded text-gray-500">
+                                                        {proj.technologies}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="text-gray-600 text-xs mt-1">
+                                            <FormattedText text={proj.description} />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                }
+                if (selectedTemplate === 'github') {
+                    if (projects.length === 0) return null;
+                    return (
+                        <div key="projects" className="mb-8">
+                            <h2 className="text-xl font-bold text-[#c9d1d9] mb-4 border-b border-[#30363d] pb-2 inline-block">// Projects</h2>
+                            <div className="space-y-4">
+                                {projects.map(proj => (
+                                    <div key={proj.id} className="border border-[#30363d] bg-[#161b22] p-4 rounded-md">
+                                        <div className="flex justify-between items-baseline mb-1">
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="font-bold text-[#79c0ff]">{proj.name}</h3>
+                                                {proj.technologies && (
+                                                    <span className="text-xs text-[#8b949e] px-2 py-0.5 rounded bg-[#30363d] border border-[#30363d]">
+                                                        {proj.technologies}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="text-gray-600 text-xs leading-relaxed mb-2">
+                                            <FormattedText text={proj.description} className="text-[#8b949e]" />
+                                        </div>
+                                        {proj.link && <a href={proj.link} className="text-[#58a6ff] text-xs hover:underline">{proj.link}</a>}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                }
+                // Classic
+                if (projects.length === 0) return null;
+                return (
+                    <div key="projects" className="mb-6">
+                        <h3 className="text-lg font-bold uppercase border-b border-gray-200 pb-1 mb-4" style={{ color: themeColor }}>Projects</h3>
+                        <div className="space-y-3">
+                            {projects.map(proj => (
+                                <div key={proj.id}>
+                                    <div className="flex justify-between font-bold text-sm">
+                                        <div className="flex items-center gap-2">
+                                            <span>{proj.name}</span>
+                                            {proj.technologies && (
+                                                <span className="text-[10px] text-gray-500 font-semibold bg-gray-100 px-1.5 py-0.5 rounded">
+                                                    {proj.technologies}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {proj.link && <a href={proj.link} className="text-blue-600 font-normal hover:underline text-xs">{proj.link}</a>}
+                                    </div>
+                                    <div className="text-sm text-gray-700">
+                                        <FormattedText text={proj.description} />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+
+            case 'personal':
+                // Usually handled in header, but sometimes has summary
+                return null;
+
+            default:
+                // Check for custom section
+                const customSection = data.customSections?.find(s => s.id === sectionId);
+                if (!customSection) return null;
+
+                if (selectedTemplate === 'modern') {
+                    return (
+                        <div key={customSection.id}>
+                            <h3 className="text-sm font-bold uppercase tracking-widest mb-6 border-b pb-2" style={{ color: themeColor, borderColor: '#e5e7eb' }}>
+                                {customSection.title}
+                            </h3>
+                            <div className="space-y-6">
+                                {customSection.items.map(item => (
+                                    <div key={item.id} className="relative pl-4 border-l-2 border-gray-100">
+                                        <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full" style={{ backgroundColor: themeColor }}></div>
+                                        <div className="flex justify-between items-baseline mb-1">
+                                            <h4 className="font-bold text-gray-900">{item.name}</h4>
+                                            <span className="text-xs text-gray-400 font-medium">{item.date}</span>
+                                        </div>
+                                        {item.city && <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">{item.city}</div>}
+                                        <FormattedText text={item.description} className="text-gray-600 text-sm whitespace-pre-wrap block" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                }
+
+                if (selectedTemplate === 'minimalist') {
+                    return (
+                        <div key={customSection.id} className="mb-8">
+                            <h3 className="font-bold uppercase tracking-widest text-xs mb-4 border-b border-gray-200 pb-1">{customSection.title}</h3>
+                            {customSection.items.map(item => (
+                                <div key={item.id} className="mb-4">
+                                    <div className="flex justify-between items-baseline">
+                                        <h4 className="font-bold">{item.name}</h4>
+                                        <span className="text-xs text-gray-500">{item.date}</span>
+                                    </div>
+                                    {item.city && <div className="text-sm italic text-gray-600 mb-1">{item.city}</div>}
+                                    <FormattedText text={item.description} className="text-sm mt-1 text-gray-600 whitespace-pre-wrap block" />
+                                </div>
+                            ))}
+                        </div>
+                    );
+                }
+
+                if (selectedTemplate === 'creative') {
+                    return (
+                        <div key={customSection.id} className="mb-8">
+                            <h3 className="text-xl font-black uppercase mb-6 flex items-center gap-2" style={{ color: themeColor }}>
+                                {customSection.title}
+                            </h3>
+                            <div className="space-y-4">
+                                {customSection.items.map(item => (
+                                    <div key={item.id} className="relative pl-6">
+                                        <div className="absolute left-0 top-1.5 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: themeColor }}></div>
+                                        <div className="flex justify-between items-baseline mb-1">
+                                            <h4 className="text-lg font-bold text-gray-800">{item.name}</h4>
+                                            <span className="text-xs text-gray-400 font-bold">{item.date}</span>
+                                        </div>
+                                        {item.city && <div className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">{item.city}</div>}
+                                        <FormattedText text={item.description} className="text-gray-600 text-sm whitespace-pre-wrap block" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                }
+
+                if (selectedTemplate === 'github') {
+                    return (
+                        <div key={customSection.id} className="mb-8">
+                            <h2 className="text-xl font-bold text-[#c9d1d9] mb-4 border-b border-[#30363d] pb-2 inline-block">// {customSection.title}</h2>
+                            <div className="space-y-4">
+                                {customSection.items.map(item => (
+                                    <div key={item.id} className="border border-[#30363d] bg-[#161b22] p-4 rounded-md">
+                                        <div className="flex justify-between items-baseline mb-1">
+                                            <h3 className="font-bold text-[#79c0ff]">{item.name}</h3>
+                                            <span className="text-xs text-[#8b949e]">{item.date}</span>
+                                        </div>
+                                        <div className="text-xs text-[#a5d6ff] mb-2">{item.city}</div>
+                                        <FormattedText text={`/* ${item.description} */`} className="text-[#8b949e] text-xs leading-relaxed opacity-90 block" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                }
+
+                // Classic
+                return (
+                    <div key={customSection.id} className="mb-6">
+                        <h3 className="text-lg font-bold uppercase border-b border-gray-200 pb-1 mb-4" style={{ color: themeColor }}>{customSection.title}</h3>
+                        <div className="space-y-3">
+                            {customSection.items.map(item => (
+                                <div key={item.id}>
+                                    <div className="flex justify-between font-bold text-sm">
+                                        <span>{item.name}</span>
+                                        <span className="text-sm font-normal text-gray-600">{item.date}</span>
+                                    </div>
+                                    <div className="text-xs text-gray-500 mb-1">{item.city}</div>
+                                    <FormattedText text={item.description} className="text-sm text-gray-700 whitespace-pre-wrap block" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+        }
+    };
+
+    const renderSection = (sectionId: string) => {
+        const content = renderSectionContent(sectionId);
+        if (!content) return null;
+        const scale = sectionScales?.[sectionId] || 1;
+        // Cast style to any to avoid TS error with zoom if strict
+        return <div key={sectionId} style={{ zoom: scale } as any}>{content}</div>;
+    };
+
+    const sectionOrder = data.sectionOrder || ['personal', 'education', 'experience', 'projects', 'skills'];
+
+    // Helper to determine Main vs Sidebar sections for columnar layouts.
+    // By default, Education and Skills go to sidebar/left. Everything else (including Custom) goes to Main/Right.
+    const sidebarIds = ['education', 'skills'];
+    const getSidebarSections = () => sectionOrder.filter(id => sidebarIds.includes(id));
+    const getMainSections = () => sectionOrder.filter(id => !sidebarIds.includes(id) && id !== 'personal');
+
+    const ScaledWrapper = ({ children, className = "", style = {} }: { children: React.ReactNode, className?: string, style?: React.CSSProperties }) => (
+        <div data-template={selectedTemplate} className={cn("w-[794px] h-[1123px] bg-white shadow-2xl mx-auto origin-top-left overflow-hidden flex flex-col border-x-[3px] border-slate-300/80 dark:border-slate-600/80 relative", selectedTemplate === 'github' && "dark:border-slate-700")} style={{ transform: `scale(${scale})` }}>
+
+            {/* Branding - Fixed at Bottom */}
+            {isBrandingEnabled && (
+                <div className="absolute bottom-5 left-0 right-0 text-center text-[8px] text-gray-400 font-sans pointer-events-none z-50" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    Powered by MyResume
+                </div>
+            )}
+
+            <div style={{
+                width: `${100 / contentScale}%`,
+                transform: `scale(${contentScale})`,
+                transformOrigin: 'top left',
+                ...style,
+            }} className={cn("flex-1 flex min-h-full relative", className)}>
+                {children}
+            </div>
+        </div>
+    );
+
+
+    // 1. Modern Template
+    if (selectedTemplate === 'modern') {
+        const sidebarSections = getSidebarSections();
+        const mainSections = getMainSections();
+
+        return (
+            <ScaledWrapper className="flex text-sm text-gray-800 leading-relaxed font-sans" style={{ fontFamily }}>
+                {/* Sidebar */}
+                <div className="w-[32%] px-10 py-8 text-white flex flex-col gap-8 min-h-full" style={{ backgroundColor: themeColor }}>
+                    {/* Contact (Fixed) */}
+                    <div style={{ zoom: sectionScales?.personal || 1 }}>
+                        {(personalInfo.email || personalInfo.phone || personalInfo.location || personalInfo.linkedin || personalInfo.website || personalInfo.github) && (
+                            <div className="space-y-4">
+                                <h3 className="uppercase tracking-widest text-xs font-bold border-b border-white/30 pb-2 mb-4 opacity-80">Contact</h3>
+                                {personalInfo.email && (
+                                    <div className="flex items-center gap-3 text-xs">
+                                        <Mail className="w-3 h-3 opacity-70" />
+                                        <span className="break-all">{personalInfo.email}</span>
+                                    </div>
+                                )}
+                                {personalInfo.phone && (
+                                    <div className="flex items-center gap-3 text-xs">
+                                        <Phone className="w-3 h-3 opacity-70" />
+                                        <span>{personalInfo.phone}</span>
+                                    </div>
+                                )}
+                                {personalInfo.location && (
+                                    <div className="flex items-center gap-3 text-xs">
+                                        <MapPin className="w-3 h-3 opacity-70" />
+                                        <span>{personalInfo.location}</span>
+                                    </div>
+                                )}
+                                {personalInfo.linkedin && (
+                                    <div className="flex items-center gap-3 text-xs">
+                                        <Linkedin className="w-3 h-3 opacity-70" />
+                                        <span className="break-all">{personalInfo.linkedin.replace(/^https?:\/\/(www\.)?/, '')}</span>
+                                    </div>
+                                )}
+                                {personalInfo.website && (
+                                    <div className="flex items-center gap-3 text-xs">
+                                        <LinkIcon className="w-3 h-3 opacity-70" />
+                                        <span className="break-all">{personalInfo.website.replace(/^https?:\/\/(www\.)?/, '')}</span>
+                                    </div>
+                                )}
+                                {personalInfo.github && (
+                                    <div className="flex items-center gap-3 text-xs">
+                                        <Github className="w-3 h-3 opacity-70" />
+                                        <span className="break-all">{personalInfo.github.replace(/^https?:\/\/(www\.)?/, '')}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {sidebarSections.map(renderSection)}
+                </div>
+
+                {/* Main Content */}
+                <div className="w-[68%] px-12 py-8 pt-12 flex flex-col gap-8">
+                    <div style={{ zoom: sectionScales?.personal || 1 }}>
+                        <h1 className="text-4xl font-extrabold uppercase tracking-tight" style={{ color: themeColor }}>{personalInfo.fullName}</h1>
+                        {personalInfo.jobTitle && <p className="text-lg text-gray-500 mt-2 font-light">{personalInfo.jobTitle}</p>}
+                        <FormattedText text={personalInfo.summary} className="mt-6 text-gray-600 leading-relaxed text-sm block" />
+                    </div>
+
+                    {mainSections.map(renderSection)}
+                </div>
+            </ScaledWrapper>
+        );
+    }
+
+    // 2. Minimalist Template
+    if (selectedTemplate === 'minimalist') {
+        const leftSections = getSidebarSections();
+        const rightSections = getMainSections();
+
+        return (
+            <ScaledWrapper className="px-16 py-12 text-gray-900 font-serif" style={{ fontFamily }}>
+                <div className="h-full">
+                    <header className="border-b-2 pb-8 mb-8" style={{ borderColor: themeColor, zoom: sectionScales?.personal || 1 }}>
+                        <h1 className="text-5xl mb-4 tracking-tighter" style={{ color: themeColor }}>{personalInfo.fullName}</h1>
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                            {personalInfo.email && <span>{personalInfo.email}</span>}
+                            {personalInfo.phone && <span>• {personalInfo.phone}</span>}
+                            {personalInfo.location && <span>• {personalInfo.location}</span>}
+                            {personalInfo.website && <span>• {personalInfo.website}</span>}
+                        </div>
+                    </header>
+
+                    <div className="grid grid-cols-[1fr_2fr] gap-8">
+                        <div className="space-y-8">
+                            {leftSections.map(renderSection)}
+                        </div>
+
+                        <div className="space-y-8">
+                            {personalInfo.summary && (
+                                <div style={{ zoom: sectionScales?.personal || 1 }}>
+                                    <h3 className="font-bold uppercase tracking-widest text-xs mb-3 border-b border-gray-200 pb-1">Profile</h3>
+                                    <FormattedText text={personalInfo.summary} className="text-sm leading-relaxed block" />
+                                </div>
+                            )}
+                            {rightSections.map(renderSection)}
+                        </div>
+                    </div>
+                </div>
+            </ScaledWrapper>
+        )
+    }
+
+    // 3. GitHub Template
+    if (selectedTemplate === "github") {
+        return (
+            <ScaledWrapper className="bg-[#0d1117] text-[#c9d1d9] font-mono text-sm px-14 py-10" style={{ fontFamily }}>
+                <div className="h-full">
+                    <div className="border-b border-[#30363d] pb-6 mb-8" style={{ zoom: sectionScales?.personal || 1 }}>
+                        <h1 className="text-3xl font-bold text-[#58a6ff] mb-2">
+                            function <span className="text-[#c9d1d9]">{personalInfo.fullName.replace(/\s+/g, '_')}</span>()
+                        </h1>
+                        <div className="text-[#8b949e] space-y-1 text-xs">
+                            <p>const profile = {"{"}</p>
+                            <div className="pl-4">
+                                {personalInfo.email && <p>email: "<span className="text-[#a5d6ff]">{personalInfo.email}</span>",</p>}
+                                {personalInfo.phone && <p>phone: "<span className="text-[#a5d6ff]">{personalInfo.phone}</span>",</p>}
+                                {personalInfo.location && <p>location: "<span className="text-[#a5d6ff]">{personalInfo.location}</span>",</p>}
+                                {personalInfo.github && <p>github: "<span className="text-[#a5d6ff]">{personalInfo.github}</span>",</p>}
+                            </div>
+                            <p>{"}"}</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-8">
+                        {sectionOrder.map(renderSection)}
+                    </div>
+                </div>
+            </ScaledWrapper>
+        );
+    }
+
+    // 4. Creative Template
+    if (selectedTemplate === "creative") {
+        const sidebarSections = getSidebarSections();
+        const mainSections = getMainSections();
+        return (
+            <ScaledWrapper className="flex" style={{ fontFamily }}>
+                <div className="w-[35%] px-10 py-8 text-white flex flex-col gap-8 shrink-0 min-h-full" style={{ backgroundColor: themeColor }}>
+                    <div style={{ zoom: sectionScales?.personal || 1 }}>
+                        <div className="mt-4">
+                            <h1 className="text-4xl font-black uppercase leading-none mb-2">{personalInfo.fullName}</h1>
+                            {personalInfo.jobTitle && <p className="text-sm font-bold tracking-widest uppercase opacity-80">{personalInfo.jobTitle}</p>}
+                        </div>
+
+                        {(personalInfo.email || personalInfo.phone || personalInfo.location || personalInfo.website || personalInfo.linkedin) && (
+                            <div className="space-y-4 mt-8">
+                                <h4 className="font-bold uppercase tracking-widest text-xs border-b border-white/20 pb-2 mb-2">Contact</h4>
+                                <div className="space-y-2 text-xs font-medium opacity-90">
+                                    {personalInfo.email && <div className="break-all">{personalInfo.email}</div>}
+                                    {personalInfo.phone && <div>{personalInfo.phone}</div>}
+                                    {personalInfo.location && <div>{personalInfo.location}</div>}
+                                    {personalInfo.website && <div className="underline decoration-white/50">{personalInfo.website}</div>}
+                                    {personalInfo.linkedin && <div className="underline decoration-white/50">LinkedIn</div>}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {sidebarSections.map(renderSection)}
+                </div>
+
+                <div className="w-[65%] px-14 py-10 pt-16 flex flex-col gap-8">
+                    {personalInfo.summary && (
+                        <div style={{ zoom: sectionScales?.personal || 1 }}>
+                            <h3 className="text-xl font-black uppercase mb-3 flex items-center gap-2" style={{ color: themeColor }}>
+                                Profile
+                            </h3>
+                            <div className="text-gray-600 leading-relaxed font-medium text-sm border-l-4 pl-4 border-gray-100">
+                                <FormattedText text={personalInfo.summary} className="block" />
+                            </div>
+                        </div>
+                    )}
+
+                    {mainSections.map(renderSection)}
+                </div>
+            </ScaledWrapper>
+        )
+    }
+
+
+
+    // 6. Corporate Blue Template
+    if (selectedTemplate === 'corporate') {
+        const accentColor = themeColor || '#1e4d7b';
+        return (
+            <ScaledWrapper className="flex h-full" style={{ fontFamily }}>
+                {/* Left Sidebar - Navy Blue */}
+                <div className="w-[35%] text-white px-6 py-8 flex flex-col min-h-0 overflow-hidden" style={{ backgroundColor: accentColor }}>
+                    {/* Photo placeholder - circular */}
+                    <div className="w-32 h-32 rounded-full bg-white/20 mx-auto mb-6 flex items-center justify-center">
+                        <span className="text-5xl font-bold text-white/60">{personalInfo.fullName?.charAt(0) || '?'}</span>
+                    </div>
+
+                    {/* Contact Section */}
+                    {(personalInfo.email || personalInfo.phone || personalInfo.location || personalInfo.website) && (
+                        <div className="mb-6" style={{ zoom: sectionScales?.personal || 1 }}>
+                            <h3 className="text-xs uppercase tracking-wider font-bold mb-3 pb-1 border-b border-white/30">Contact</h3>
+                            <div className="space-y-2 text-xs">
+                                {personalInfo.email && (
+                                    <div className="flex items-center gap-2">
+                                        <Mail className="w-3 h-3" />
+                                        <span>{personalInfo.email}</span>
+                                    </div>
+                                )}
+                                {personalInfo.phone && (
+                                    <div className="flex items-center gap-2">
+                                        <Phone className="w-3 h-3" />
+                                        <span>{personalInfo.phone}</span>
+                                    </div>
+                                )}
+                                {personalInfo.location && (
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="w-3 h-3" />
+                                        <span>{personalInfo.location}</span>
+                                    </div>
+                                )}
+                                {personalInfo.website && (
+                                    <div className="flex items-center gap-2">
+                                        <LinkIcon className="w-3 h-3" />
+                                        <span>{personalInfo.website}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Skills Section */}
+                    {skills && (
+                        <div className="mb-6">
+                            <h3 className="text-xs uppercase tracking-wider font-bold mb-3 pb-1 border-b border-white/30">Skills</h3>
+                            <div className="space-y-1 text-xs">
+                                {skills.split(',').map((skill: string, i: number) => (
+                                    <div key={i} className="py-0.5">{skill.trim()}</div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* LinkedIn/GitHub - treat as "Links" */}
+                    {(personalInfo.linkedin || personalInfo.github) && (
+                        <div className="mt-auto">
+                            <h3 className="text-xs uppercase tracking-wider font-bold mb-3 pb-1 border-b border-white/30">Links</h3>
+                            <div className="space-y-2 text-xs">
+                                {personalInfo.linkedin && (
+                                    <div className="flex items-center gap-2">
+                                        <Linkedin className="w-3 h-3" />
+                                        <span className="truncate">{personalInfo.linkedin}</span>
+                                    </div>
+                                )}
+                                {personalInfo.github && (
+                                    <div className="flex items-center gap-2">
+                                        <Github className="w-3 h-3" />
+                                        <span className="truncate">{personalInfo.github}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Right Content - White */}
+                <div className="w-[65%] bg-gray-50 p-8 min-h-0 overflow-auto">
+                    {/* Header */}
+                    <div className="mb-6" style={{ zoom: sectionScales?.personal || 1 }}>
+                        <h1 className="text-2xl font-bold tracking-wide" style={{ color: accentColor }}>{personalInfo.fullName}</h1>
+                        <p className="text-sm text-gray-600 mt-1">{personalInfo.jobTitle}</p>
+                    </div>
+
+                    {/* Summary */}
+                    {personalInfo.summary && (
+                        <div className="mb-6" style={{ zoom: sectionScales?.personal || 1 }}>
+                            <h3 className="text-sm font-bold uppercase tracking-wider mb-2 pb-1 border-b-2" style={{ color: accentColor, borderColor: accentColor }}>Summary</h3>
+                            <FormattedText text={personalInfo.summary} className="text-xs text-gray-700 leading-relaxed" />
+                        </div>
+                    )}
+
+                    {/* Education */}
+                    {education.length > 0 && (
+                        <div className="mb-6">
+                            <h3 className="text-sm font-bold uppercase tracking-wider mb-2 pb-1 border-b-2" style={{ color: accentColor, borderColor: accentColor }}>Education</h3>
+                            <div className="space-y-3">
+                                {education.map((edu) => (
+                                    <div key={edu.id} className="text-xs">
+                                        <div className="flex justify-between">
+                                            <span className="font-semibold text-gray-900">{edu.degree}</span>
+                                            <span className="text-gray-500">{edu.startDate} - {edu.endDate}</span>
+                                        </div>
+                                        <p className="text-gray-600">{edu.school}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Experience */}
+                    {experience.length > 0 && (
+                        <div className="mb-6">
+                            <h3 className="text-sm font-bold uppercase tracking-wider mb-2 pb-1 border-b-2" style={{ color: accentColor, borderColor: accentColor }}>Work Experience</h3>
+                            <div className="space-y-4">
+                                {experience.map((exp) => (
+                                    <div key={exp.id} className="text-xs">
+                                        <div className="flex justify-between">
+                                            <span className="font-semibold text-gray-900">{exp.role}</span>
+                                            <span className="text-gray-500">{exp.startDate} - {exp.endDate}</span>
+                                        </div>
+                                        <p className="text-gray-600">{exp.company}</p>
+                                        {exp.description && <FormattedText text={exp.description} className="text-gray-500 mt-1" />}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Projects */}
+                    {projects.length > 0 && (
+                        <div className="mb-6">
+                            <h3 className="text-sm font-bold uppercase tracking-wider mb-2 pb-1 border-b-2" style={{ color: accentColor, borderColor: accentColor }}>Projects</h3>
+                            <div className="space-y-3">
+                                {projects.map((proj) => (
+                                    <div key={proj.id} className="text-xs">
+                                        <span className="font-semibold text-gray-900">{proj.name}</span>
+                                        <div className="text-gray-500 mt-1">
+                                            {proj.description && <FormattedText text={proj.description} />}
+                                            {proj.technologies && (
+                                                <span className="ml-2 text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded inline-block align-middle">
+                                                    {proj.technologies}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Branding Footer */}
+                    {isBrandingEnabled && (
+                        <div className="mt-auto pt-4 border-t border-gray-200 text-center">
+                            <span className="text-[9px] text-gray-400 flex items-center justify-center gap-1">
+                                <Sparkles className="w-2.5 h-2.5" /> Powered by LoneStar
+                            </span>
+                        </div>
+                    )}
+                </div>
+            </ScaledWrapper>
+        );
+    }
+
+    // 7. Executive Template (Gold & Gray)
+    if (selectedTemplate === 'executive') {
+        const goldColor = '#c9a050';
+        const darkGray = themeColor || '#333333';
+        return (
+            <ScaledWrapper className="flex flex-col h-full" style={{ fontFamily }}>
+                {/* Header Bar */}
+                <div className="flex items-center gap-6 px-8 py-6" style={{ backgroundColor: darkGray }}>
+                    {/* Photo placeholder */}
+                    {/* Photo placeholder */}
+                    <div
+                        className="w-20 h-20 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0 overflow-hidden"
+                        style={{
+                            border: `${personalInfo.photoFilters?.borderWidth || 0}px solid ${personalInfo.photoFilters?.borderColor || goldColor}`
+                        }}
+                    >
+                        {personalInfo.photo ? (
+                            <img
+                                src={personalInfo.photo}
+                                alt={personalInfo.fullName}
+                                className="w-full h-full object-cover"
+                                style={{
+                                    filter: `brightness(${personalInfo.photoFilters?.brightness || 1}) contrast(${personalInfo.photoFilters?.contrast || 1}) grayscale(${personalInfo.photoFilters?.grayscale || 0})`,
+                                    transform: `scale(${personalInfo.photoFilters?.scale || 1})`
+                                }}
+                            />
+                        ) : (
+                            <span className="text-3xl font-bold text-white/60">{personalInfo.fullName?.charAt(0) || '?'}</span>
+                        )}
+                    </div>
+                    <div className="text-white" style={{ zoom: sectionScales?.personal || 1 }}>
+                        <h1 className="text-2xl font-bold tracking-wide">{personalInfo.fullName}</h1>
+                        <p className="text-sm opacity-80 mt-1">{personalInfo.jobTitle}</p>
+                    </div>
+                </div>
+
+                {/* Main Content Area */}
+                <div className="flex flex-1 min-h-0">
+                    {/* Left - Main Content */}
+                    <div className="w-[65%] p-6 overflow-auto bg-white">
+                        {/* Profile/Summary */}
+                        {personalInfo.summary && (
+                            <div className="mb-5" style={{ zoom: sectionScales?.personal || 1 }}>
+                                <h3 className="text-sm font-bold uppercase tracking-wider mb-2 pb-1" style={{ color: goldColor, borderBottom: `2px solid ${goldColor}` }}>Profile</h3>
+                                <FormattedText text={personalInfo.summary} className="text-xs text-gray-700 leading-relaxed" />
+                            </div>
+                        )}
+
+                        {/* Experience */}
+                        {experience.length > 0 && (
+                            <div className="mb-5">
+                                <h3 className="text-sm font-bold uppercase tracking-wider mb-2 pb-1" style={{ color: goldColor, borderBottom: `2px solid ${goldColor}` }}>Work Experience</h3>
+                                <div className="space-y-3">
+                                    {experience.map((exp) => (
+                                        <div key={exp.id} className="text-xs">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <span className="font-semibold text-gray-900">{exp.company}</span>
+                                                    <span className="text-gray-500 mx-2">|</span>
+                                                    <span className="text-gray-600">{exp.role}</span>
+                                                </div>
+                                                <span className="text-gray-500 text-[10px]">{exp.startDate} - {exp.endDate}</span>
+                                            </div>
+                                            {exp.description && <FormattedText text={exp.description} className="text-gray-600 mt-1" />}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Education */}
+                        {education.length > 0 && (
+                            <div className="mb-5">
+                                <h3 className="text-sm font-bold uppercase tracking-wider mb-2 pb-1" style={{ color: goldColor, borderBottom: `2px solid ${goldColor}` }}>Education</h3>
+                                <div className="space-y-2">
+                                    {education.map((edu) => (
+                                        <div key={edu.id} className="text-xs">
+                                            <div className="flex justify-between">
+                                                <span className="font-semibold text-gray-900">{edu.school}</span>
+                                                <span className="text-gray-500 text-[10px]">{edu.startDate} - {edu.endDate}</span>
+                                            </div>
+                                            <p className="text-gray-600">{edu.degree}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Projects */}
+                        {projects.length > 0 && (
+                            <div className="mb-5">
+                                <h3 className="text-sm font-bold uppercase tracking-wider mb-2 pb-1" style={{ color: goldColor, borderBottom: `2px solid ${goldColor}` }}>Projects</h3>
+                                <div className="space-y-2">
+                                    {projects.map((proj) => (
+                                        <div key={proj.id} className="text-xs">
+                                            <span className="font-semibold text-gray-900">{proj.name}</span>
+                                            <div className="text-gray-600 mt-1">
+                                                {proj.description && <FormattedText text={proj.description} />}
+                                                {proj.technologies && (
+                                                    <span className="ml-2 text-[10px] border border-gray-200 px-1.5 py-0.5 rounded text-gray-500 inline-block align-middle">
+                                                        {proj.technologies}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right Sidebar */}
+                    <div className="w-[35%] p-6 text-white min-h-0 overflow-hidden" style={{ backgroundColor: darkGray }}>
+                        {/* Contact */}
+                        {(personalInfo.email || personalInfo.phone || personalInfo.location) && (
+                            <div className="mb-5">
+                                <h3 className="text-xs font-bold uppercase tracking-wider mb-3 pb-1" style={{ color: goldColor, borderBottom: `1px solid ${goldColor}` }}>Contact</h3>
+                                <div className="space-y-2 text-xs">
+                                    {personalInfo.phone && (
+                                        <div className="flex items-center gap-2">
+                                            <Phone className="w-3 h-3" style={{ color: goldColor }} />
+                                            <span>{personalInfo.phone}</span>
+                                        </div>
+                                    )}
+                                    {personalInfo.email && (
+                                        <div className="flex items-center gap-2">
+                                            <Mail className="w-3 h-3" style={{ color: goldColor }} />
+                                            <span className="truncate">{personalInfo.email}</span>
+                                        </div>
+                                    )}
+                                    {personalInfo.location && (
+                                        <div className="flex items-center gap-2">
+                                            <MapPin className="w-3 h-3" style={{ color: goldColor }} />
+                                            <span>{personalInfo.location}</span>
+                                        </div>
+                                    )}
+                                    {personalInfo.website && (
+                                        <div className="flex items-center gap-2">
+                                            <LinkIcon className="w-3 h-3" style={{ color: goldColor }} />
+                                            <span className="truncate">{personalInfo.website}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Skills */}
+                        {skills && (
+                            <div className="mb-5">
+                                <h3 className="text-xs font-bold uppercase tracking-wider mb-3 pb-1" style={{ color: goldColor, borderBottom: `1px solid ${goldColor}` }}>Skills</h3>
+                                <div className="space-y-1.5 text-xs">
+                                    {skills.split(',').slice(0, 8).map((skill: string, i: number) => (
+                                        <div key={i} className="flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: goldColor }} />
+                                            <span>{skill.trim()}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Links */}
+                        {(personalInfo.linkedin || personalInfo.github) && (
+                            <div className="mb-5">
+                                <h3 className="text-xs font-bold uppercase tracking-wider mb-3 pb-1" style={{ color: goldColor, borderBottom: `1px solid ${goldColor}` }}>Links</h3>
+                                <div className="space-y-2 text-xs">
+                                    {personalInfo.linkedin && (
+                                        <div className="flex items-center gap-2">
+                                            <Linkedin className="w-3 h-3" style={{ color: goldColor }} />
+                                            <span className="truncate">{personalInfo.linkedin}</span>
+                                        </div>
+                                    )}
+                                    {personalInfo.github && (
+                                        <div className="flex items-center gap-2">
+                                            <Github className="w-3 h-3" style={{ color: goldColor }} />
+                                            <span className="truncate">{personalInfo.github}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+
+            </ScaledWrapper>
+        );
+    }
+
+
+
+    // 9. Classic Template (Default)
+    return (
+        <ScaledWrapper className="px-14 py-10 text-gray-800 font-sans" style={{ fontFamily }}>
+            <div className="h-full">
+                <div className="text-center border-b-2 border-gray-300 pb-6 mb-6" style={{ zoom: sectionScales?.personal || 1 }}>
+                    <h1 className="text-3xl font-bold uppercase tracking-wide mb-2" style={{ color: themeColor }}>{personalInfo.fullName}</h1>
+                    <div className="flex justify-center flex-wrap gap-3 text-sm text-gray-600">
+                        {[personalInfo.email, personalInfo.phone, personalInfo.location, personalInfo.linkedin].filter(Boolean).map((item, i) => (
+                            <span key={i} className={i > 0 ? "border-l border-gray-300 pl-3" : ""}>{item}</span>
+                        ))}
+                    </div>
+                </div>
+
+                {personalInfo.summary && (
+                    <div className="mb-6" style={{ zoom: sectionScales?.personal || 1 }}>
+                        <h3 className="text-lg font-bold uppercase border-b border-gray-200 pb-1 mb-3" style={{ color: themeColor }}>Professional Summary</h3>
+                        <FormattedText text={personalInfo.summary} className="text-sm leading-relaxed block" />
+                    </div>
+                )}
+
+                {/* Render all sections cleanly in simple order */}
+                {sectionOrder.map(renderSection)}
+
+
+            </div>
+        </ScaledWrapper>
+    );
+};
