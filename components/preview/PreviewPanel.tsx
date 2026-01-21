@@ -39,7 +39,7 @@ export function PreviewPanel() {
                 // 210mm is approx 794px.
                 const targetScale = (containerWidth - 64) / 794; // 64px padding
                 // Allow scale to go up to 5.0 for 4k/zoomed out screens
-                setScale(Math.min(Math.max(targetScale, 0.4), 5.0));
+                setScale(Math.min(Math.max(targetScale, 0.3), 5.0));
             }
         };
         handleResize();
@@ -83,56 +83,58 @@ export function PreviewPanel() {
     }
 
     return (
-        <div className="h-full flex flex-col bg-slate-100 dark:bg-slate-950 border-l dark:border-slate-800 relative">
+        <div className="h-full flex flex-col relative border-t dark:border-transparent">
             {/* Search Params Listener */}
             <React.Suspense fallback={null}>
                 <PaymentHandler setHasPaid={setHasPaid} />
             </React.Suspense>
 
             {/* Header */}
-            <div className="py-4 pl-4 pr-0 border-b dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 shrink-0 shadow-sm z-10">
-                <div className="flex items-center gap-4">
-                    <h2 className="font-semibold text-slate-700 dark:text-slate-200">Live Preview</h2>
-                    {activeResume && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-700">
-                            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Size</span>
-                            <input
-                                type="range"
-                                min="0.5"
-                                max="1.5"
-                                step="0.1"
-                                value={activeResume.contentScale || 1}
-                                onChange={(e) => setContentScale(parseFloat(e.target.value))}
-                                className="w-20 h-1.5 bg-gray-300 rounded-lg appearance-none cursor-pointer dark:bg-gray-600 accent-blue-600"
+            <div className="py-4 px-8 border-b dark:border-slate-800 shrink-0 z-10 bg-white/50 dark:bg-transparent backdrop-blur-sm">
+                <div className="w-full max-w-[794px] mx-auto flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                        <h2 className="font-semibold text-slate-700 dark:text-slate-200">Live Preview</h2>
+                        {activeResume && (
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-700">
+                                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Size</span>
+                                <input
+                                    type="range"
+                                    min="0.5"
+                                    max="1.5"
+                                    step="0.1"
+                                    value={activeResume.contentScale || 1}
+                                    onChange={(e) => setContentScale(parseFloat(e.target.value))}
+                                    className="w-20 h-1.5 bg-gray-300 rounded-lg appearance-none cursor-pointer dark:bg-gray-600 accent-blue-600"
+                                />
+                                <span className="text-xs font-mono w-8 text-right text-slate-600 dark:text-slate-300">
+                                    {Math.round((activeResume.contentScale || 1) * 100)}%
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                    {!hasPaid ? (
+                        <Button
+                            size="sm"
+                            onClick={handleUnlock}
+                            disabled={loading}
+                            className="bg-texastech-red hover:bg-texastech-red/90 text-white gap-2 shadow-sm"
+                        >
+                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+                            Unlock Download ($9)
+                        </Button>
+                    ) : (
+                        <div className="flex gap-2">
+                            <DownloadResumeButton
+                                key={activeResume.lastModified}
+                                fileName={`${activeResume.personalInfo.fullName.replace(/\s+/g, '_')}_Resume.pdf`}
+                                data={activeResume}
                             />
-                            <span className="text-xs font-mono w-8 text-right text-slate-600 dark:text-slate-300">
-                                {Math.round((activeResume.contentScale || 1) * 100)}%
-                            </span>
                         </div>
                     )}
                 </div>
-                {!hasPaid ? (
-                    <Button
-                        size="sm"
-                        onClick={handleUnlock}
-                        disabled={loading}
-                        className="bg-texastech-red hover:bg-texastech-red/90 text-white gap-2 shadow-sm"
-                    >
-                        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
-                        Unlock Download ($9)
-                    </Button>
-                ) : (
-                    <div className="flex gap-2">
-                        <DownloadResumeButton
-                            key={activeResume.lastModified}
-                            fileName={`${activeResume.personalInfo.fullName.replace(/\s+/g, '_')}_Resume.pdf`}
-                            data={activeResume}
-                        />
-                    </div>
-                )}
             </div>
 
-            <div id="preview-container" className="flex-1 overflow-y-auto overflow-x-hidden p-8 flex justify-center items-start scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-700 relative group bg-slate-100 dark:bg-zinc-950/50">
+            <div id="preview-container" className="flex-1 overflow-y-auto overflow-x-hidden p-8 flex justify-center items-start scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-700 relative group">
                 {/* Watermark Overlay */}
                 {!hasPaid && (
                     <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center opacity-[0.05] select-none overflow-hidden mix-blend-multiply dark:mix-blend-screen">

@@ -26,6 +26,7 @@ export interface Project {
     description: string;
     technologies: string;
     link: string;
+    linkText?: string; // Custom text to display for the link (e.g., "View Project", "GitHub")
 }
 
 export interface PersonalInfo {
@@ -50,7 +51,7 @@ export interface PersonalInfo {
     };
 }
 
-export type TemplateType = 'classic' | 'modern' | 'minimalist' | 'github' | 'creative' | 'corporate' | 'executive';
+export type TemplateType = 'classic' | 'modern' | 'minimalist' | 'github' | 'creative' | 'corporate' | 'executive' | 'designer';
 
 export interface CustomSectionItem {
     id: string;
@@ -85,6 +86,7 @@ export interface ResumeData {
     fontFamily: string;
     analysisResult?: AnalysisResult | null;
     sectionScales?: Record<string, number>;
+    isPublic?: boolean; // New: template visibility - defaults to false (private)
 }
 
 
@@ -185,7 +187,7 @@ interface ResumeState {
     addResume: (name: string) => void;
     setActiveResume: (id: string) => void;
     updateResumeName: (id: string, name: string) => void;
-    deleteResume: (id: string) => void;
+    deleteResume: (id: string) => Promise<void>;
     duplicateResume: (id: string) => void;
     resetResume: (id: string) => void;
 
@@ -193,6 +195,11 @@ interface ResumeState {
     syncToCloud: (userId: string) => Promise<void>;
     loadFromCloud: (userId: string) => Promise<void>;
     setSyncStatus: (status: 'idle' | 'syncing' | 'synced' | 'error', error?: string) => void;
+
+    // Public/Private Visibility Actions
+    toggleResumeVisibility: (resumeId: string) => void;
+    copyResumeTemplate: (sourceResumeId: string) => string | null;
+    getPublicResumes: () => ResumeData[];
 
     // Dev/Test
     loadExampleData: () => void;
@@ -439,7 +446,13 @@ export const useResumeStore = create<ResumeState>()(
                 return {
                     resumes: {
                         ...state.resumes,
-                        [resumeId]: { ...state.resumes[resumeId], selectedTemplate: template, lastModified: Date.now() }
+                        [resumeId]: {
+                            ...state.resumes[resumeId],
+                            selectedTemplate: template,
+                            contentScale: 1,
+                            sectionScales: {},
+                            lastModified: Date.now()
+                        }
                     }
                 };
             }),
@@ -685,6 +698,14 @@ export const useResumeStore = create<ResumeState>()(
                         website: "",
                         github: "",
                         summary: "",
+                        photoFilters: {
+                            scale: 1,
+                            brightness: 1,
+                            contrast: 1,
+                            grayscale: 0,
+                            borderWidth: 0,
+                            borderColor: '#ffffff'
+                        }
                     },
                     education: [],
                     experience: [],
@@ -715,14 +736,43 @@ export const useResumeStore = create<ResumeState>()(
                 }
             })),
 
-            deleteResume: (id) => set((state) => {
-                const newResumes = { ...state.resumes };
-                delete newResumes[id];
-                const activeId = state.activeResumeId === id
-                    ? (Object.keys(newResumes)[0] || null)
-                    : state.activeResumeId;
-                return { resumes: newResumes, activeResumeId: activeId };
-            }),
+            deleteResume: async (id) => {
+                const state = get();
+                const resume = state.resumes[id];
+
+                // If resume was public, unpublish it from database first
+                if (resume?.isPublic) {
+                    try {
+                        let clientId = localStorage.getItem('client-id');
+                        if (!clientId) {
+                            clientId = crypto.randomUUID();
+                            localStorage.setItem('client-id', clientId);
+                        }
+
+                        await fetch('/api/templates/unpublish', {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                resumeId: id,
+                                userId: clientId
+                            })
+                        });
+                    } catch (error) {
+                        console.error('Error unpublishing template on delete:', error);
+                        // Continue with deletion even if unpublish fails
+                    }
+                }
+
+                // Delete from local store
+                set((state) => {
+                    const newResumes = { ...state.resumes };
+                    delete newResumes[id];
+                    const activeId = state.activeResumeId === id
+                        ? (Object.keys(newResumes)[0] || null)
+                        : state.activeResumeId;
+                    return { resumes: newResumes, activeResumeId: activeId };
+                });
+            },
 
             duplicateResume: (id) => set((state) => {
                 const source = state.resumes[id];
@@ -760,6 +810,14 @@ export const useResumeStore = create<ResumeState>()(
                         website: "",
                         github: "",
                         summary: "",
+                        photoFilters: {
+                            scale: 1,
+                            brightness: 1,
+                            contrast: 1,
+                            grayscale: 0,
+                            borderWidth: 0,
+                            borderColor: '#ffffff'
+                        }
                     },
                     education: [],
                     experience: [],
@@ -849,6 +907,114 @@ export const useResumeStore = create<ResumeState>()(
 
             setSyncStatus: (status, error) => set({ syncStatus: status, lastSyncError: error || null }),
 
+            // Public/Private Visibility Actions
+            toggleResumeVisibility: async (resumeId) => {
+                const state = get();
+                const resume = state.resumes[resumeId];
+
+                if (!resume) return;
+
+                const newIsPublic = !resume.isPublic;
+
+                // Generate or retrieve a client-side user ID (for API tracking)
+                let clientId = localStorage.getItem('client-id');
+                if (!clientId) {
+                    clientId = crypto.randomUUID();
+                    localStorage.setItem('client-id', clientId);
+                }
+
+                // Optimistically update local state
+                set((state) => ({
+                    resumes: {
+                        ...state.resumes,
+                        [resumeId]: {
+                            ...state.resumes[resumeId],
+                            isPublic: newIsPublic,
+                            lastModified: Date.now()
+                        }
+                    }
+                }));
+
+                // Sync to Supabase
+                try {
+                    if (newIsPublic) {
+                        // Publish to database
+                        const response = await fetch('/api/templates/publish', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                resumeId,
+                                resumeData: resume,
+                                userId: clientId
+                            })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Failed to publish template');
+                        }
+                    } else {
+                        // Unpublish from database
+                        const response = await fetch('/api/templates/unpublish', {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                resumeId,
+                                userId: clientId
+                            })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Failed to unpublish template');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error syncing template visibility:', error);
+                    // Revert on error
+                    set((state) => ({
+                        resumes: {
+                            ...state.resumes,
+                            [resumeId]: {
+                                ...state.resumes[resumeId],
+                                isPublic: !newIsPublic,
+                                lastModified: Date.now()
+                            }
+                        }
+                    }));
+                }
+            },
+
+            copyResumeTemplate: (sourceResumeId) => {
+                const state = get();
+                const sourceResume = state.resumes[sourceResumeId];
+
+                // Only allow copying public resumes
+                if (!sourceResume || !sourceResume.isPublic) {
+                    return null;
+                }
+
+                const newId = crypto.randomUUID();
+                const newResume: ResumeData = {
+                    ...sourceResume,
+                    id: newId,
+                    name: `${sourceResume.name} (Copy)`,
+                    isPublic: false, // Copies are always private
+                    lastModified: Date.now(),
+                    analysisResult: null // Don't copy analysis results
+                };
+
+                set((state) => ({
+                    resumes: { ...state.resumes, [newId]: newResume },
+                    activeResumeId: newId
+                }));
+
+                return newId;
+            },
+
+            getPublicResumes: () => {
+                const state = get();
+                return Object.values(state.resumes).filter(resume => resume.isPublic === true);
+            },
+
             loadExampleData: () => set((state) => {
                 const activeId = state.activeResumeId;
                 if (!activeId) {
@@ -904,8 +1070,8 @@ export const useResumeStore = create<ResumeState>()(
                                 customSections: [],
                                 sectionOrder: ['personal', 'education', 'experience', 'projects', 'skills'],
                                 sectionTitles: {},
-                                selectedTemplate: 'classic',
-                                themeColor: '#112e51',
+                                selectedTemplate: get().resumes[id]?.selectedTemplate || 'modern',
+                                themeColor: get().resumes[id]?.themeColor || '#112e51',
                                 contentScale: 1,
                                 isBrandingEnabled: false,
                                 fontFamily: 'inter'

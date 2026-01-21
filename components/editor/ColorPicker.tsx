@@ -31,7 +31,7 @@ export function ColorPicker() {
     if (isHidden) return null;
 
     return (
-        <div className="mb-6 bg-white dark:bg-gray-900 rounded-lg shadow-sm border p-4 flex flex-col justify-between h-full">
+        <div className="mb-6 bg-white dark:bg-black rounded-lg shadow-sm border p-4 flex flex-col justify-between h-full">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <div className="p-1.5 bg-purple-100 dark:bg-purple-900/30 rounded-md text-purple-600 dark:text-purple-400">

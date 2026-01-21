@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle2, FileText, Sparkles, Zap, LayoutTemplate, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
+import { TemplateGallery } from "@/components/home/TemplateGallery";
 
 export default function Home() {
   const containerVariants = {
@@ -46,7 +47,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="mx-auto w-full max-w-screen-2xl px-4 sm:px-6 lg:px-8 flex flex-col min-h-screen">
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-16 pb-20 lg:pt-32 lg:pb-28">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-500/20 via-background to-background" />
@@ -192,6 +193,9 @@ export default function Home() {
           />
         </motion.div>
       </section>
+
+      {/* Community Templates Gallery */}
+      <TemplateGallery />
 
       {/* CTA Section */}
       <section className="py-20">

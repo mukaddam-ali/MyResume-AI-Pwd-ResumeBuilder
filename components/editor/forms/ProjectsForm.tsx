@@ -160,13 +160,24 @@ export function ProjectsForm() {
                                                     placeholder="React, Node.js, PostgreSQL"
                                                 />
                                             </div>
-                                            <div className="grid gap-2">
-                                                <Label>Link (Optional)</Label>
-                                                <Input
-                                                    value={proj.link}
-                                                    onChange={(e) => updateProject(proj.id, { link: e.target.value })}
-                                                    placeholder="https://github.com/..."
-                                                />
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="grid gap-2">
+                                                    <Label>Link (Optional)</Label>
+                                                    <Input
+                                                        value={proj.link}
+                                                        onChange={(e) => updateProject(proj.id, { link: e.target.value })}
+                                                        placeholder="e.g., github.com/username/project"
+                                                        type="url"
+                                                    />
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label>Link Text (Optional)</Label>
+                                                    <Input
+                                                        value={proj.linkText || ''}
+                                                        onChange={(e) => updateProject(proj.id, { linkText: e.target.value })}
+                                                        placeholder="e.g., View Project, GitHub"
+                                                    />
+                                                </div>
                                             </div>
                                             <div className="grid gap-2">
                                                 <div className="flex justify-between items-center">

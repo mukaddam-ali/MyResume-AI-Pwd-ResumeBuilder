@@ -115,7 +115,7 @@ export function ExperienceForm() {
 
             <SectionScaleControl sectionId="experience" />
 
-            <SectionScaleControl sectionId="experience" />
+
 
             <DndContext
                 sensors={sensors}

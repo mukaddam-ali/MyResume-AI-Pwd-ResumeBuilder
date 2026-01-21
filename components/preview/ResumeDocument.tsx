@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/alt-text */
 "use client";
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Link, Font } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet, Link, Font, Image } from '@react-pdf/renderer';
 import { ResumeData } from '@/store/useResumeStore';
 import { PdfFormattedText } from '@/components/preview/PdfFormattedText';
 
@@ -147,7 +147,7 @@ const PDF_FONT_MAP: Record<string, string> = {
 const PREMIUM_FONTS = ['lora', 'playfair', 'oswald', 'merriweather', 'jetbrains'];
 
 export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, userTier?: 'free' | 'pro' }) => {
-    const { personalInfo, education, experience, projects, skills, selectedTemplate, themeColor, contentScale = 1, isBrandingEnabled = true, fontFamily: fontId = 'inter', sectionOrder = ['personal', 'education', 'experience', 'projects', 'skills'], sectionScales } = data;
+    const { personalInfo, education, experience, projects, skills, selectedTemplate, themeColor: customThemeColor, contentScale = 1, isBrandingEnabled = true, fontFamily: fontId = 'inter', sectionOrder = ['personal', 'education', 'experience', 'projects', 'skills'], sectionScales, sectionTitles = {} } = data;
 
     // Enforce free tier: fall back to 'inter' if user is free and has a premium font
     const effectiveFontId = (userTier === 'free' && PREMIUM_FONTS.includes(fontId)) ? 'inter' : fontId;
@@ -156,14 +156,15 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
     const pdfFontFamily = PDF_FONT_MAP[effectiveFontId] || 'Helvetica';
 
     // Use default if not set
-    const accentColor = themeColor || '#112e51';
+    const accentColor = customThemeColor || '#112e51';
 
 
 
     // Helper to scale styles dynamically
     const createScaledStyles = (styles: any, extraScale: number = 1) => {
-        if (contentScale === 1 && extraScale === 1) return StyleSheet.create(styles);
-        const scale = contentScale * extraScale;
+        const globalScale = contentScale || 1;
+        if (globalScale === 1 && extraScale === 1) return StyleSheet.create(styles);
+        const scale = globalScale * extraScale;
         const noScaleProps = new Set(['flexGrow', 'flexShrink', 'zIndex', 'opacity', 'fontWeight', 'lineHeight', 'flex', 'top', 'bottom', 'left', 'right']);
 
         const mapStyles = (obj: any): any => {
@@ -279,8 +280,6 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             backgroundColor: accentColor,
             paddingVertical: 24, // Reduced from 32
             paddingHorizontal: 30, // Reduced from 40
-            minHeight: '100%',
-            height: '100%',
             color: '#FFFFFF',
         },
         main: {
@@ -288,14 +287,12 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             paddingVertical: 24, // Reduced from 32
             paddingHorizontal: 36, // Reduced from 48
             paddingTop: 36, // Reduced from 48
-            minHeight: '100%',
-            height: '100%',
         },
         sidebarSection: {
             marginBottom: 24, // Reduced from 32
         },
         sidebarTitle: {
-            fontSize: 10, // Reduced from 12
+            fontSize: 9, // Reduced from 10
             fontWeight: 'bold',
             color: 'rgba(255,255,255,0.8)',
             marginBottom: 12, // Reduced from 16
@@ -305,13 +302,13 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             letterSpacing: 1.5,
         },
         sidebarText: {
-            fontSize: 9, // Reduced from 12
+            fontSize: 8, // Reduced from 9
             color: '#FFFFFF',
             marginBottom: 4,
             lineHeight: 1.4
         },
         name: {
-            fontSize: 28, // Reduced from 36
+            fontSize: 24, // Reduced from 28
             fontWeight: 'bold',
             color: accentColor,
             textTransform: 'uppercase',
@@ -319,13 +316,13 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             letterSpacing: -0.5,
         },
         jobTitle: {
-            fontSize: 14, // Reduced from 18
+            fontSize: 12, // Reduced from 14
             color: '#6b7280',
             marginBottom: 18, // Reduced from 24
             fontWeight: 'light'
         },
         sectionTitle: {
-            fontSize: 11, // Reduced from 14
+            fontSize: 10, // Reduced from 11
             fontWeight: 'bold',
             color: accentColor,
             marginBottom: 18, // Reduced from 24
@@ -379,7 +376,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             borderColor: '#f3f4f6'
         },
         techPill: {
-            fontSize: 10,
+            fontSize: 9, // Reduced from 10
             color: '#4b5563',
             backgroundColor: '#e5e7eb', // gray-200 background
             paddingHorizontal: 12,
@@ -394,15 +391,16 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             textAlign: 'center', // Text alignment
         },
         // Custom Section Items - Sidebar
-        sidebarItemName: { fontSize: 10, fontWeight: 'bold' },
-        sidebarItemDate: { fontSize: 9 },
-        sidebarItemCity: { fontSize: 9, color: '#666' },
-        sidebarItemDesc: { fontSize: 9, lineHeight: 1.3, marginTop: 2 },
+        sidebarItemName: { fontSize: 9, fontWeight: 'bold' },
+        sidebarItemDate: { fontSize: 8 },
+        sidebarItemCity: { fontSize: 8, color: '#666' },
+        sidebarItemDesc: { fontSize: 8, lineHeight: 1.3, marginTop: 2 },
         // Custom Section Items - Main
-        mainItemName: { fontSize: 11, fontWeight: 'bold' },
-        mainItemDate: { fontSize: 10, color: '#666' },
-        mainItemCity: { fontSize: 10, color: '#6b7280', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: 4 },
-        mainItemDesc: { fontSize: 10, lineHeight: 1.4 },
+        mainItemName: { fontSize: 10, fontWeight: 'bold' },
+        mainItemDate: { fontSize: 9, color: '#666' },
+        mainItemCity: { fontSize: 9, color: '#6b7280', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: 4 },
+        mainItemDesc: { fontSize: 9, lineHeight: 1.4 },
+        headerBlock: { marginBottom: 24 },
     }, s);
 
     const modernStyles = getModernStyles(1);
@@ -420,24 +418,24 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
         header: {
             marginBottom: 24, // Reduced from 32
             borderBottomWidth: 2,
-            borderBottomColor: themeColor,
+            borderBottomColor: '#D1D5DB', // Changed from customThemeColor to Gray
             paddingBottom: 24, // Reduced from 32
         },
         name: {
-            fontSize: 36, // Reduced from 48
+            fontSize: 30, // Reduced from 36
             fontFamily: pdfFontFamily,
             fontWeight: 'bold',
             marginBottom: 12, // Reduced from 16
             letterSpacing: -1,
-            color: themeColor,
+            color: customThemeColor,
         },
         contact: {
-            fontSize: 10, // Reduced from 14
+            fontSize: 9, // Reduced from 10
             color: '#4b5563',
             marginTop: 3,
         },
         sectionTitle: {
-            fontSize: 10, // Reduced from 12
+            fontSize: 9.5, // Reduced from 10
             fontWeight: 'bold',
             letterSpacing: 2,
             textTransform: 'uppercase',
@@ -446,7 +444,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             paddingBottom: 3,
             borderBottomWidth: 1,
             borderBottomColor: '#E5E7EB',
-            color: themeColor,
+            color: customThemeColor,
         },
         itemGroup: {
             marginBottom: 18, // Reduced from 24
@@ -458,25 +456,25 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             marginBottom: 3,
         },
         company: {
-            fontSize: 14, // Reduced from 18
+            fontSize: 12, // Reduced from 14
             fontWeight: 'bold',
         },
         title: {
-            fontSize: 11, // Reduced from 14
+            fontSize: 10, // Reduced from 11
             fontStyle: 'italic',
             color: '#374151',
         },
         date: {
-            fontSize: 9, // Reduced from 12
+            fontSize: 8.5, // Reduced from 9
             color: '#6b7280',
         },
         description: {
-            fontSize: 10, // Reduced from 14
+            fontSize: 9, // Reduced from 10
             paddingLeft: 0,
             lineHeight: 1.5,
             color: '#4b5563',
         },
-        itemCity: { fontSize: 9, fontStyle: 'italic', marginBottom: 2 },
+        itemCity: { fontSize: 8.5, fontStyle: 'italic', marginBottom: 2 },
     }, s);
     const minimalistStyles = getMinimalistStyles(1);
 
@@ -496,10 +494,8 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
         sidebar: {
             width: '35%',
             backgroundColor: accentColor,
-            paddingVertical: 24, // Reduced from 32
-            paddingHorizontal: 30, // Reduced from 40
-            minHeight: '100%',
-            height: '100%',
+            paddingVertical: 32,
+            paddingHorizontal: 24, // Reduced from 40 for more space
             color: '#FFFFFF',
         },
         main: {
@@ -507,42 +503,41 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             paddingVertical: 30, // Reduced from 40
             paddingHorizontal: 40, // Reduced from 56
             paddingTop: 48, // Reduced from 64
-            minHeight: '100%',
-            height: '100%',
         },
         name: {
-            fontSize: 28, // Reduced from 36
+            fontSize: 24, // Reduced from 28
             fontWeight: 'bold',
             marginBottom: 6,
             textTransform: 'uppercase',
             letterSpacing: 2,
+            lineHeight: 1.2, // Ensure multi-line names look good
         },
         role: {
-            fontSize: 10, // Reduced from 14
+            fontSize: 9, // Reduced from 10
             marginBottom: 18, // Reduced from 24
             letterSpacing: 1,
             opacity: 0.9,
             fontWeight: 'bold',
         },
         sidebarTitle: {
-            fontSize: 9, // Reduced from 12
+            fontSize: 8.5, // Reduced from 9
             fontWeight: 'bold',
             borderBottomWidth: 1,
             borderBottomColor: 'rgba(255,255,255,0.2)',
-            paddingBottom: 6, // Reduced from 8
-            marginBottom: 12, // Reduced from 16
-            marginTop: 24, // Reduced from 32
+            paddingBottom: 6,
+            marginBottom: 12,
+            marginTop: 24,
             textTransform: 'uppercase',
             letterSpacing: 1,
         },
         sidebarText: {
-            fontSize: 9, // Reduced from 12
+            fontSize: 8, // Reduced from 9
             marginBottom: 6, // Reduced from 8
             lineHeight: 1.5,
             opacity: 0.9,
         },
         sectionTitle: {
-            fontSize: 16, // Reduced from 20
+            fontSize: 14, // Reduced from 16
             fontWeight: 'bold',
             color: accentColor,
             textTransform: 'uppercase',
@@ -553,7 +548,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             letterSpacing: 1,
         },
         mainText: {
-            fontSize: 10, // Reduced from 14
+            fontSize: 9, // Reduced from 10
             lineHeight: 1.6,
             color: '#374151',
             marginBottom: 6,
@@ -565,12 +560,12 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             marginBottom: 3,
         },
         companyName: {
-            fontSize: 14, // Reduced from 18
+            fontSize: 12, // Reduced from 14
             fontWeight: 'bold',
             color: '#111827',
         },
         roleName: {
-            fontSize: 10, // Reduced from 12
+            fontSize: 9, // Reduced from 10
             fontWeight: 'bold',
             color: '#6b7280',
             textTransform: 'uppercase',
@@ -591,7 +586,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             position: 'relative',
             marginBottom: 24 // Reduced from 32
         },
-        itemDate: { fontSize: 10, color: '#666' },
+        itemDate: { fontSize: 9, color: '#666' },
     }, s);
     const creativeStyles = getCreativeStyles(1);
 
@@ -624,7 +619,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             fontWeight: 'bold',
             marginBottom: 6, // Reduced from 12 to decrease space between name and contact
             textTransform: 'uppercase',
-            color: themeColor,
+            color: customThemeColor,
             textAlign: 'center',
             lineHeight: 1.5,
         },
@@ -642,7 +637,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             borderBottomWidth: 2,
             borderBottomColor: '#e5e7eb',
             textTransform: 'uppercase',
-            color: themeColor,
+            color: customThemeColor,
         },
         subheading: {
             fontSize: 10, // Reduced from 11
@@ -666,7 +661,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
         sectionTitle: {
             fontSize: 14, // Reduced from 18
             fontWeight: 'bold',
-            color: themeColor,
+            color: customThemeColor,
             marginBottom: 12, // Reduced from 16
             borderBottomWidth: 1,
             borderBottomColor: '#e5e7eb',
@@ -687,7 +682,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
         italic: {
             fontStyle: 'italic',
             fontSize: 10, // Reduced from 14
-            color: themeColor,
+            color: customThemeColor,
         },
         branding: {
             position: 'absolute',
@@ -704,34 +699,35 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
 
     const getCorporateStyles = (s = 1) => createScaledStyles({
         page: {
-            flexDirection: 'row',
+            flexDirection: 'column',
             backgroundColor: '#FFFFFF',
             fontFamily: pdfFontFamily,
+        },
+        container: {
+            flexDirection: 'row',
+            width: '100%',
+            flex: 1,
         },
         sidebar: {
             width: '35%',
             backgroundColor: accentColor,
-            paddingVertical: 24, // Reduced from 32
-            paddingHorizontal: 18, // Reduced from 24
+            paddingVertical: 24,
+            paddingHorizontal: 18,
             color: '#FFFFFF',
-            minHeight: '100%',
-            height: '100%',
+            flexGrow: 1,
         },
         main: {
             width: '65%',
-            padding: 24, // Reduced from 32
+            padding: 24,
             backgroundColor: '#f9f9f9',
-            minHeight: '100%',
-            height: '100%',
+            flexGrow: 1,
         },
         sidebarHeading: {
             fontSize: 8, // Reduced from 10
             fontWeight: 'bold',
             textTransform: 'uppercase',
-            borderBottomWidth: 1,
-            borderBottomColor: 'rgba(255,255,255,0.3)',
-            paddingBottom: 3,
-            marginBottom: 9,
+            // Border removed here, handled by explicit line View
+            marginBottom: 4,
             marginTop: 15,
             letterSpacing: 1,
         },
@@ -758,12 +754,12 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             color: 'rgba(255,255,255,0.6)',
         },
         mainHeading: {
-            fontSize: 9, // Reduced from 12
+            fontSize: 9,
             fontWeight: 'bold',
             color: accentColor,
             textTransform: 'uppercase',
             borderBottomWidth: 2,
-            borderBottomColor: accentColor,
+            borderBottomColor: '#d1d5db',
             paddingBottom: 3,
             marginBottom: 9,
             marginTop: 11,
@@ -807,14 +803,12 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
         container: {
             flexDirection: 'row',
             width: '100%',
-            minHeight: '100%',
         },
         header: {
-            backgroundColor: themeColor || '#333333',
+            backgroundColor: customThemeColor || '#333333',
             flexDirection: 'row',
-            paddingVertical: 18, // Reduced from 24
-            paddingHorizontal: 24, // Reduced from 32
-            gap: 18,
+            paddingVertical: 18,
+            paddingHorizontal: 24,
             alignItems: 'center',
         },
         headerName: {
@@ -835,32 +829,30 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             height: 60,
             borderRadius: 6,
             backgroundColor: 'rgba(255,255,255,0.2)',
-            borderWidth: 2,
-            borderColor: '#c9a050',
+            // Border handled dynamically
+            marginRight: 18,
         },
         body: {
             flexDirection: 'row',
-            minHeight: '100%',
+            flexGrow: 1,
         },
         main: {
             width: '65%',
-            padding: 18, // Reduced from 24
-            minHeight: '100%',
+            padding: 18,
         },
         sidebar: {
             width: '35%',
-            backgroundColor: themeColor || '#333333',
-            padding: 18, // Reduced from 24
+            backgroundColor: customThemeColor || '#333333',
+            padding: 18,
             color: '#FFFFFF',
-            minHeight: '100%',
         },
         sectionTitle: {
             fontSize: 9, // Reduced from 12
             fontWeight: 'bold',
-            color: '#c9a050',
+            color: '#4b5563', // Changed from #c9a050 (gold) to gray
             textTransform: 'uppercase',
             borderBottomWidth: 2,
-            borderBottomColor: '#c9a050',
+            borderBottomColor: '#D1D5DB', // Changed from #c9a050 to gray
             paddingBottom: 3,
             marginBottom: 9,
             marginTop: 11,
@@ -869,12 +861,10 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
         sidebarTitle: {
             fontSize: 8, // Reduced from 10
             fontWeight: 'bold',
-            color: '#c9a050',
+            color: '#D1D5DB', // Changed from #c9a050 (gold) to gray
             textTransform: 'uppercase',
-            borderBottomWidth: 1,
-            borderBottomColor: '#c9a050',
-            paddingBottom: 3,
-            marginBottom: 9,
+            // Border removed here, replaced by explicit View
+            marginBottom: 4,
             marginTop: 11,
             letterSpacing: 1,
         },
@@ -897,7 +887,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
         },
         headerLeft: {
             width: '50%',
-            backgroundColor: themeColor || '#1a3a3a',
+            backgroundColor: customThemeColor || '#1a3a3a',
             padding: 24, // Reduced from 32
             justifyContent: 'center',
         },
@@ -925,8 +915,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             width: 84, // Reduced from 112
             height: 84,
             borderRadius: 42,
-            borderWidth: 3,
-            borderColor: '#FFFFFF',
+            // Border handled dynamically
         },
         body: {
             flexDirection: 'row',
@@ -934,7 +923,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
         },
         leftCol: {
             width: '50%',
-            backgroundColor: themeColor || '#1a3a3a',
+            backgroundColor: customThemeColor || '#1a3a3a',
             padding: 24, // Reduced from 32
             color: '#FFFFFF',
             minHeight: '100%',
@@ -954,18 +943,18 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             marginBottom: 11,
             letterSpacing: 2,
             borderBottomWidth: 1,
-            borderBottomColor: 'rgba(255,255,255,0.2)',
+            borderBottomColor: '#D1D5DB', // Changed from rgba(255,255,255,0.2) to Gray
             paddingBottom: 3,
         },
         sectionTitleRight: {
             fontSize: 9, // Reduced from 12
             fontWeight: 'bold',
-            color: themeColor || '#1a3a3a',
+            color: customThemeColor || '#1a3a3a',
             textTransform: 'uppercase',
             marginBottom: 11,
             letterSpacing: 2,
             borderBottomWidth: 1,
-            borderBottomColor: themeColor || '#1a3a3a',
+            borderBottomColor: customThemeColor || '#1a3a3a',
             paddingBottom: 3,
         },
         skillPill: {
@@ -978,7 +967,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
         },
         skillText: {
             fontSize: 7, // Reduced from 9
-            color: themeColor || '#1a3a3a',
+            color: customThemeColor || '#1a3a3a',
             fontWeight: 'bold',
         }
     }, s);
@@ -1018,8 +1007,8 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             borderColor: '#30363d',
             backgroundColor: '#161b22',
             borderRadius: 4,
-            padding: 12, // Reduced from 16
-            marginBottom: 12, // Reduced from 16
+            padding: 12,
+            marginBottom: 12,
             width: '100%',
         },
         sectionTitle: {
@@ -1037,10 +1026,22 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             color: '#8b949e',
             marginLeft: 6,
             backgroundColor: '#30363d',
+            borderWidth: 1,
+            borderColor: '#30363d',
             paddingHorizontal: 6,
             paddingVertical: 2,
             borderRadius: 4,
         },
+        techTag: {
+            fontSize: 8,
+            backgroundColor: '#e5e7eb',
+            color: '#374151',
+            paddingHorizontal: 6,
+            paddingVertical: 2,
+            borderRadius: 2,
+            alignSelf: 'flex-start'
+        },
+
         link: {
             color: '#58a6ff',
             textDecoration: 'none',
@@ -1101,7 +1102,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'experience':
                     return experience.length > 0 && (
                         <View key="experience" style={{ marginBottom: 20 }}>
-                            <Text style={githubStyles.sectionTitle}>// Experience</Text>
+                            <Text style={githubStyles.sectionTitle}>// {sectionTitles.experience || "Professional Experience"}</Text>
                             {experience.map((exp: any) => (
                                 <View key={exp.id} style={githubStyles.repoBox}>
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -1117,15 +1118,21 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'projects':
                     return projects.length > 0 && (
                         <View key="projects" style={{ marginBottom: 20 }}>
-                            <Text style={githubStyles.sectionTitle}>// Projects</Text>
+                            <Text style={githubStyles.sectionTitle}>// {sectionTitles.projects || "Projects"}</Text>
                             {projects.map((proj: any) => (
                                 <View key={proj.id} style={githubStyles.repoBox}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        <Text style={{ color: '#58a6ff', fontWeight: 'bold' }}>{proj.name}</Text>
-                                        <Text style={githubStyles.langTag}>{proj.technologies}</Text>
+                                    <View style={{ flexDirection: 'column' }}>
+                                        <Text style={{ color: '#58a6ff', fontWeight: 'bold', marginBottom: 2 }}>{proj.name}</Text>
+                                        {proj.technologies && (
+                                            <Text style={githubStyles.langTag}>// {proj.technologies}</Text>
+                                        )}
                                     </View>
                                     <PdfFormattedText text={proj.description} style={githubStyles.description} />
-                                    {proj.link && <Text style={{ color: '#8b949e', fontSize: 8, marginTop: 4 }}>{proj.link}</Text>}
+                                    {proj.link && (
+                                        <Link src={proj.link} style={{ color: '#8b949e', fontSize: 8, marginTop: 4, textDecoration: 'none' }}>
+                                            {proj.linkText || "View Project"}
+                                        </Link>
+                                    )}
                                 </View>
                             ))}
                         </View>
@@ -1133,7 +1140,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'education':
                     return education.length > 0 && (
                         <View key="education" style={{ marginBottom: 20 }}>
-                            <Text style={githubStyles.sectionTitle}>// Education</Text>
+                            <Text style={githubStyles.sectionTitle}>// {sectionTitles.education || "Education"}</Text>
                             {education.map((edu: any) => (
                                 <View key={edu.id} style={{ marginBottom: 10 }}>
                                     <Text style={{ color: '#c9d1d9' }}>{edu.school}</Text>
@@ -1146,10 +1153,14 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'skills':
                     return skills && (
                         <View key="skills" style={{ marginBottom: 20 }}>
-                            <Text style={githubStyles.sectionTitle}>// Skills</Text>
-                            <Text style={{ color: '#8b949e', lineHeight: 1.5 }}>
-                                ['{skills.replace(/, /g, "', '")}']
-                            </Text>
+                            <Text style={githubStyles.sectionTitle}>// {sectionTitles.skills || "Skills"}</Text>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                                {skills.split(',').map((skill: string, i: number) => (
+                                    <View key={i} style={{ backgroundColor: '#161b22', padding: '3 8', borderRadius: 10, border: '1 solid #30363d' }}>
+                                        <Text style={{ fontSize: 9, color: '#8b949e' }}>{skill.trim()}</Text>
+                                    </View>
+                                ))}
+                            </View>
                         </View>
                     );
                 default: return null;
@@ -1172,17 +1183,20 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
         return (
             <Document>
                 <Page size="A4" style={githubStyles.page}>
-                    <View style={githubStyles.header}>
-                        <Text style={githubStyles.name}>function {personalInfo.fullName.replace(/\s+/g, '_')}()</Text>
-                        <Text style={githubStyles.contact}>
-                            "email": "{personalInfo.email}",{"\n"}
-                            "location": "{personalInfo.location}",{"\n"}
-                            "github": "{personalInfo.github}"
-                        </Text>
-                    </View>
+                    <View style={{ width: '100%', height: '100%' }} wrap={false}>
+                        <View style={githubStyles.header}>
+                            <Text style={githubStyles.name}>function {personalInfo.fullName.replace(/\s+/g, '_')}()</Text>
+                            <Text style={githubStyles.contact}>
+                                "role": "{personalInfo.jobTitle}",{"\n"}
+                                "email": "{personalInfo.email}",{"\n"}
+                                "location": "{personalInfo.location}",{"\n"}
+                                "github": "{personalInfo.github}"
+                            </Text>
+                        </View>
 
-                    {sectionOrder.map(renderGithubSection)}
-                    {isBrandingEnabled && <Text style={styles.branding} fixed>Powered by MyResume</Text>}
+                        {sectionOrder.map(renderGithubSection)}
+                    </View>
+                    {isBrandingEnabled && <Text style={styles.branding} fixed>Powered by LoneStar</Text>}
                 </Page>
             </Document>
         )
@@ -1218,7 +1232,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'education':
                     return education.length > 0 && (
                         <View key="education" style={{ marginBottom: 20 }}>
-                            <Text style={minimalistStyles.sectionTitle}>Education</Text>
+                            <Text style={minimalistStyles.sectionTitle}>{sectionTitles.education || "Education"}</Text>
                             {education.map((edu: any) => (
                                 <View key={edu.id} style={{ marginBottom: 8 }}>
                                     <Text style={minimalistStyles.company}>{edu.school}</Text>
@@ -1231,14 +1245,20 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'skills':
                     return skills && (
                         <View key="skills" style={{ marginBottom: 20 }}>
-                            <Text style={minimalistStyles.sectionTitle}>Skills</Text>
-                            <Text style={{ fontSize: 10, lineHeight: 1.4, fontFamily: 'Times-Roman' }}>{skills}</Text>
+                            <Text style={minimalistStyles.sectionTitle}>{sectionTitles.skills || "Skills"}</Text>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                                {skills.split(',').map((skill: string, i: number) => (
+                                    <View key={i} style={{ backgroundColor: '#f3f4f6', padding: '3 10', borderRadius: 12, border: '1 solid #e5e7eb' }}>
+                                        <Text style={{ fontSize: 10, color: '#374151', fontFamily: 'Times-Roman' }}>{skill.trim()}</Text>
+                                    </View>
+                                ))}
+                            </View>
                         </View>
                     );
                 case 'experience':
                     return experience.length > 0 && (
                         <View key="experience" style={minimalistStyles.itemGroup}>
-                            <Text style={minimalistStyles.sectionTitle}>Experience</Text>
+                            <Text style={minimalistStyles.sectionTitle}>{sectionTitles.experience || "Professional Experience"}</Text>
                             {experience.map((exp: any) => (
                                 <View key={exp.id} style={minimalistStyles.itemGroup}>
                                     <View style={minimalistStyles.row}>
@@ -1253,19 +1273,23 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'projects':
                     return projects.length > 0 && (
                         <View key="projects" style={minimalistStyles.itemGroup}>
-                            <Text style={minimalistStyles.sectionTitle}>Projects</Text>
+                            <Text style={minimalistStyles.sectionTitle}>{sectionTitles.projects || "Projects"}</Text>
                             {projects.map((proj: any) => (
                                 <View key={proj.id} style={minimalistStyles.itemGroup}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        <Text style={minimalistStyles.company}>{proj.name}</Text>
-                                        {proj.technologies && (
-                                            <Text style={{ fontSize: 9, backgroundColor: '#f3f4f6', color: '#4b5563', padding: '1 3', borderRadius: 2, marginLeft: 5 }}>
+                                    <Text style={minimalistStyles.company}>{proj.name}</Text>
+                                    {proj.technologies && (
+                                        <View style={{ marginTop: 2, marginBottom: 2 }}>
+                                            <Text style={{ fontSize: 9, backgroundColor: '#f3f4f6', color: '#374151', padding: '1 3', borderRadius: 2, alignSelf: 'flex-start' }}>
                                                 {proj.technologies}
                                             </Text>
-                                        )}
-                                    </View>
-                                    <PdfFormattedText text={proj.description} style={minimalistStyles.description} />
-                                    {proj.link && <Text style={{ fontSize: 9, marginTop: 2, fontStyle: 'italic', color: '#2563eb' }}>{proj.link}</Text>}
+                                        </View>
+                                    )}
+                                    <PdfFormattedText text={proj.description} style={{ ...minimalistStyles.description, marginBottom: 4 }} />
+                                    {proj.link && (
+                                        <Link src={proj.link} style={{ fontSize: 9, marginTop: 4, fontStyle: 'italic', color: '#2563eb', textDecoration: 'none' }}>
+                                            {proj.linkText || "View Project"}
+                                        </Link>
+                                    )}
                                 </View>
                             ))}
                         </View>
@@ -1277,27 +1301,32 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
         return (
             <Document>
                 <Page size="A4" style={minimalistStyles.page}>
-                    <View style={minimalistStyles.header}>
-                        <Text style={minimalistStyles.name}>{personalInfo.fullName}</Text>
-                        <Text style={minimalistStyles.contact}>{personalInfo.email} • {personalInfo.phone} • {personalInfo.location}</Text>
-                        <Text style={minimalistStyles.contact}>{personalInfo.website} • {personalInfo.linkedin}</Text>
-                    </View>
+                    <View style={{ width: '100%', height: '100%' }} wrap={false}>
+                        <View style={minimalistStyles.header}>
+                            <Text style={minimalistStyles.name}>{personalInfo.fullName}</Text>
+                            {personalInfo.jobTitle && <Text style={{ fontSize: 14, color: '#9ca3af', marginBottom: 16, fontFamily: 'Times-Roman', textTransform: 'uppercase', letterSpacing: 2 }}>{personalInfo.jobTitle}</Text>}
+                            <Text style={minimalistStyles.contact}>{personalInfo.email} • {personalInfo.phone} • {personalInfo.location}</Text>
+                            <Text style={minimalistStyles.contact}>
+                                {[personalInfo.website, personalInfo.linkedin, personalInfo.github].filter(Boolean).map(s => s?.replace(/^https?:\/\/(www\.)?/, '')).join(' • ')}
+                            </Text>
+                        </View>
 
-                    <View style={{ flexDirection: 'row' }}>
-                        <View style={{ flex: 1, marginRight: 20 }}>
-                            {leftSections.map(renderMinimalistSection)}
-                        </View>
-                        <View style={{ flex: 2 }}>
-                            {personalInfo.summary && (
-                                <View style={{ marginBottom: 20 }}>
-                                    <Text style={minimalistStyles.sectionTitle}>Profile</Text>
-                                    <PdfFormattedText text={personalInfo.summary} style={{ fontSize: 10, lineHeight: 1.4, fontFamily: 'Times-Roman' }} />
-                                </View>
-                            )}
-                            {rightSections.map(renderMinimalistSection)}
+                        <View style={{ flexDirection: 'row' }}>
+                            <View style={{ width: '35%', marginRight: 20 }}>
+                                {leftSections.map(renderMinimalistSection)}
+                            </View>
+                            <View style={{ width: '60%' }}>
+                                {personalInfo.summary && (
+                                    <View style={{ marginBottom: 20 }}>
+                                        <Text style={minimalistStyles.sectionTitle}>{sectionTitles.summary || "Profile"}</Text>
+                                        <PdfFormattedText text={personalInfo.summary} style={{ fontSize: 10, lineHeight: 1.4, fontFamily: 'Times-Roman' }} />
+                                    </View>
+                                )}
+                                {rightSections.map(renderMinimalistSection)}
+                            </View>
                         </View>
                     </View>
-                    {isBrandingEnabled && <Text style={styles.branding} fixed>Powered by MyResume</Text>}
+                    {isBrandingEnabled && <Text style={styles.branding} fixed>Powered by LoneStar</Text>}
                 </Page>
             </Document >
         )
@@ -1351,7 +1380,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'education':
                     return education.length > 0 && (
                         <View key="education" style={modernStyles.sidebarSection}>
-                            <Text style={modernStyles.sidebarTitle}>Education</Text>
+                            <Text style={modernStyles.sidebarTitle}>{sectionTitles.education || "Education"}</Text>
                             {education.map((edu: any) => (
                                 <View key={edu.id} style={{ marginBottom: 8 }}>
                                     <Text style={{ fontWeight: 'bold', fontSize: 10 }}>{edu.school}</Text>
@@ -1364,7 +1393,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'skills':
                     return skills && (
                         <View key="skills" style={modernStyles.sidebarSection}>
-                            <Text style={modernStyles.sidebarTitle}>Skills</Text>
+                            <Text style={modernStyles.sidebarTitle}>{sectionTitles.skills || "Skills"}</Text>
                             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
                                 {skills.split(',').map((skill: string, i: number) => (
                                     <View key={i} style={modernStyles.skillPill}>
@@ -1377,7 +1406,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'experience':
                     return experience.length > 0 && (
                         <View key="experience" style={modernStyles.sidebarSection}>
-                            <Text style={modernStyles.sectionTitle}>Experience</Text>
+                            <Text style={modernStyles.sectionTitle}>{sectionTitles.experience || "Professional Experience"}</Text>
                             {experience.map((exp: any) => (
                                 <View key={exp.id} style={modernStyles.contentWithBullet}>
                                     <View style={modernStyles.bullet} />
@@ -1400,21 +1429,25 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'projects':
                     return projects.length > 0 && (
                         <View key="projects" style={modernStyles.sidebarSection}>
-                            <Text style={modernStyles.sectionTitle}>Projects</Text>
+                            <Text style={modernStyles.sectionTitle}>{sectionTitles.projects || "Projects"}</Text>
                             {projects.map((proj: any) => (
                                 <View key={proj.id} style={modernStyles.projectCard}>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                            <Text style={{ fontWeight: 'bold', fontSize: 11, color: '#111827' }}>{proj.name}</Text>
-                                            {proj.technologies && (
-                                                <Text style={{ fontSize: 9, backgroundColor: '#e5e7eb', color: '#4b5563', padding: '1 4', borderRadius: 4, marginLeft: 6 }}>
+                                    <View style={{ marginBottom: 6 }}>
+                                        <Text style={{ fontWeight: 'bold', fontSize: 11, color: '#111827' }}>{proj.name}</Text>
+                                        {proj.technologies && (
+                                            <View style={{ flexDirection: 'row', marginTop: 3 }}>
+                                                <Text style={{ fontSize: 9, backgroundColor: '#e5e7eb', color: '#4b5563', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 }}>
                                                     {proj.technologies}
                                                 </Text>
-                                            )}
-                                        </View>
+                                            </View>
+                                        )}
                                     </View>
                                     <PdfFormattedText text={proj.description} style={{ fontSize: 10, lineHeight: 1.4, color: '#4b5563', marginBottom: 4 }} />
-                                    {proj.link && <Text style={{ fontSize: 9, color: '#2563eb', fontWeight: 'bold', marginTop: 4 }}>View Project →</Text>}
+                                    {proj.link && (
+                                        <Link src={proj.link} style={{ fontSize: 9, color: '#2563eb', fontWeight: 'bold', marginTop: 4, textDecoration: 'none' }}>
+                                            {proj.linkText || "View Project ->"}
+                                        </Link>
+                                    )}
                                 </View>
                             ))}
                         </View>
@@ -1426,12 +1459,12 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
         return (
             <Document>
                 <Page size="A4" style={modernStyles.page}>
-                    <View style={modernStyles.container}>
+                    <View style={modernStyles.container} wrap={false}>
                         {/* Sidebar */}
                         <View style={modernStyles.sidebar}>
                             {/* Contact */}
                             <View style={modernStyles.sidebarSection}>
-                                <Text style={personalStyles.sidebarTitle}>Contact</Text>
+                                <Text style={personalStyles.sidebarTitle}>{sectionTitles.contact || "Contact"}</Text>
                                 {personalInfo.email && <Text style={personalStyles.sidebarText}>{personalInfo.email}</Text>}
                                 {personalInfo.phone && <Text style={personalStyles.sidebarText}>{personalInfo.phone}</Text>}
                                 {personalInfo.location && <Text style={personalStyles.sidebarText}>{personalInfo.location}</Text>}
@@ -1444,7 +1477,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
 
                         {/* Main Content */}
                         <View style={modernStyles.main}>
-                            <View>
+                            <View style={personalStyles.headerBlock}>
                                 <Text style={personalStyles.name}>{personalInfo.fullName}</Text>
                                 {personalInfo.jobTitle && <Text style={personalStyles.jobTitle}>{personalInfo.jobTitle}</Text>}
                                 {personalInfo.summary && <PdfFormattedText text={personalInfo.summary} style={{ fontSize: 10 * (sectionScales?.personal || 1), marginTop: 16 * (sectionScales?.personal || 1), lineHeight: 1.5, color: '#6b7280' }} />}
@@ -1452,7 +1485,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                             {mainSections.map(id => renderModernSection(id, false))}
                         </View>
                     </View>
-                    {isBrandingEnabled && <Text style={styles.branding} fixed>Powered by MyResume</Text>}
+                    {isBrandingEnabled && <Text style={styles.branding} fixed>Powered by LoneStar</Text>}
                 </Page>
             </Document>
         );
@@ -1493,7 +1526,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'education':
                     return education.length > 0 && (
                         <View key="education" style={creativeStyles.sidebarContent}>
-                            <Text style={creativeStyles.sidebarTitle}>Education</Text>
+                            <Text style={creativeStyles.sidebarTitle}>{sectionTitles.education || "Education"}</Text>
                             {education.map((edu: any) => (
                                 <View key={edu.id} style={{ marginBottom: 10 }}>
                                     <Text style={{ fontWeight: 'bold', fontSize: 10 }}>{edu.school}</Text>
@@ -1506,7 +1539,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'skills':
                     return skills && (
                         <View key="skills" style={creativeStyles.sidebarContent}>
-                            <Text style={creativeStyles.sidebarTitle}>Skills</Text>
+                            <Text style={creativeStyles.sidebarTitle}>{sectionTitles.skills || "Skills"}</Text>
                             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
                                 {skills.split(',').map((skill: string, i: number) => (
                                     <View key={i} style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '3 6', borderRadius: 4 }}>
@@ -1519,7 +1552,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'experience':
                     return experience.length > 0 && (
                         <View key="experience" style={{ marginBottom: 20 }}>
-                            <Text style={creativeStyles.sectionTitle}>Experience</Text>
+                            <Text style={creativeStyles.sectionTitle}>{sectionTitles.experience || "Professional Experience"}</Text>
                             {experience.map((exp: any) => (
                                 <View key={exp.id} style={creativeStyles.expItem}>
                                     <View style={creativeStyles.bullet} />
@@ -1536,19 +1569,21 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'projects':
                     return projects.length > 0 && (
                         <View key="projects" style={{ marginBottom: 20 }}>
-                            <Text style={creativeStyles.sectionTitle}>Projects</Text>
+                            <Text style={creativeStyles.sectionTitle}>{sectionTitles.projects || "Projects"}</Text>
                             {projects.map((proj: any) => (
                                 <View key={proj.id} style={{ marginBottom: 10 }}>
                                     <View style={creativeStyles.expHeader}>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <View style={{ flexDirection: 'column' }}>
                                             <Text style={creativeStyles.companyName}>{proj.name}</Text>
-                                            {proj.technologies && (
-                                                <Text style={{ fontSize: 9, color: '#6b7280', backgroundColor: '#f9fafb', padding: '1 3', borderRadius: 2, marginLeft: 5 }}>
-                                                    {proj.technologies}
-                                                </Text>
-                                            )}
                                         </View>
                                     </View>
+                                    {proj.technologies && (
+                                        <View style={{ marginBottom: 4, marginTop: 1 }}>
+                                            <Text style={{ fontSize: 9, color: '#6b7280', backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#e5e7eb', padding: '1 3', borderRadius: 2, alignSelf: 'flex-start' }}>
+                                                {proj.technologies}
+                                            </Text>
+                                        </View>
+                                    )}
                                     <PdfFormattedText text={proj.description} style={creativeStyles.mainText} />
                                 </View>
                             ))}
@@ -1561,7 +1596,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
         return (
             <Document>
                 <Page size="A4" style={creativeStyles.page}>
-                    <View style={creativeStyles.container}>
+                    <View style={creativeStyles.container} wrap={false}>
                         {/* Sidebar */}
                         <View style={creativeStyles.sidebar}>
                             <View style={{ marginTop: 16 }}>
@@ -1569,14 +1604,16 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                                 {personalInfo.jobTitle && <Text style={personalStyles.role}>{personalInfo.jobTitle}</Text>}
                             </View>
 
-                            {(personalInfo.email || personalInfo.phone || personalInfo.location || personalInfo.website) && (
+                            {(personalInfo.email || personalInfo.phone || personalInfo.location || personalInfo.website || personalInfo.linkedin || personalInfo.github) && (
                                 <View style={{ marginTop: 32 }}>
-                                    <Text style={personalStyles.sidebarTitle}>Contact</Text>
+                                    <Text style={personalStyles.sidebarTitle}>{sectionTitles.contact || "Contact"}</Text>
                                     <View style={{ gap: 8 }}>
                                         {personalInfo.email && <Text style={personalStyles.sidebarText}>{personalInfo.email}</Text>}
                                         {personalInfo.phone && <Text style={personalStyles.sidebarText}>{personalInfo.phone}</Text>}
                                         {personalInfo.location && <Text style={personalStyles.sidebarText}>{personalInfo.location}</Text>}
                                         {personalInfo.website && <Text style={personalStyles.sidebarText}>{personalInfo.website}</Text>}
+                                        {personalInfo.linkedin && <Text style={personalStyles.sidebarText}>{personalInfo.linkedin.replace(/^https?:\/\/(www\.)?/, '')}</Text>}
+                                        {personalInfo.github && <Text style={personalStyles.sidebarText}>{personalInfo.github.replace(/^https?:\/\/(www\.)?/, '')}</Text>}
                                     </View>
                                 </View>
                             )}
@@ -1588,7 +1625,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                         <View style={creativeStyles.main}>
                             {personalInfo.summary && (
                                 <View style={{ marginBottom: 32 }}>
-                                    <Text style={personalStyles.sectionTitle}>Profile</Text>
+                                    <Text style={personalStyles.sectionTitle}>{sectionTitles.summary || "Profile"}</Text>
                                     <PdfFormattedText text={personalInfo.summary} style={personalStyles.mainText} />
                                 </View>
                             )}
@@ -1596,7 +1633,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                             {mainSections.map(renderCreativeSection)}
                         </View>
                     </View>
-                    {isBrandingEnabled && <Text style={styles.branding} fixed>Powered by MyResume</Text>}
+                    {isBrandingEnabled && <Text style={styles.branding} fixed>Powered by LoneStar</Text>}
                 </Page>
             </Document>
         )
@@ -1616,9 +1653,9 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                         <Text style={isSidebar ? corporateStyles.sidebarHeading : corporateStyles.mainHeading}>
                             {customSection.title}
                         </Text>
-                        <View style={{ gap: 8 }}>
+                        <View>
                             {customSection.items.map((item: any) => (
-                                <View key={item.id}>
+                                <View key={item.id} style={{ marginBottom: 8 }}>
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                                         <Text style={corporateStyles.itemTitle}>{item.name}</Text>
                                         <Text style={corporateStyles.itemDate}>{item.date}</Text>
@@ -1636,10 +1673,10 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'education':
                     return education.length > 0 && (
                         <View key="education" style={{ marginBottom: 15 }}>
-                            <Text style={corporateStyles.mainHeading}>Education</Text>
-                            <View style={{ gap: 10 }}>
+                            <Text style={corporateStyles.mainHeading}>{sectionTitles.education || "Education"}</Text>
+                            <View>
                                 {education.map((edu: any) => (
-                                    <View key={edu.id}>
+                                    <View key={edu.id} style={{ marginBottom: 10 }}>
                                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                                             <Text style={corporateStyles.itemTitle}>{edu.degree}</Text>
                                             <Text style={corporateStyles.itemDate}>{edu.startDate} - {edu.endDate}</Text>
@@ -1653,16 +1690,16 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'experience':
                     return experience.length > 0 && (
                         <View key="experience" style={{ marginBottom: 15 }}>
-                            <Text style={corporateStyles.mainHeading}>Work Experience</Text>
-                            <View style={{ gap: 12 }}>
+                            <Text style={corporateStyles.mainHeading}>{sectionTitles.experience || "Professional Experience"}</Text>
+                            <View>
                                 {experience.map((exp: any) => (
-                                    <View key={exp.id}>
+                                    <View key={exp.id} style={{ marginBottom: 12 }}>
                                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                                             <Text style={corporateStyles.itemTitle}>{exp.role}</Text>
                                             <Text style={corporateStyles.itemDate}>{exp.startDate} - {exp.endDate}</Text>
                                         </View>
                                         <Text style={corporateStyles.itemSub}>{exp.company}</Text>
-                                        <PdfFormattedText text={exp.description} style={{ fontSize: 9, color: '#4b5563', marginTop: 4 }} />
+                                        <PdfFormattedText text={exp.description} style={corporateStyles.itemDesc} />
                                     </View>
                                 ))}
                             </View>
@@ -1671,19 +1708,21 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'projects':
                     return projects.length > 0 && (
                         <View key="projects" style={{ marginBottom: 15 }}>
-                            <Text style={corporateStyles.mainHeading}>Projects</Text>
-                            <View style={{ gap: 10 }}>
+                            <Text style={corporateStyles.mainHeading}>{sectionTitles.projects || "Projects"}</Text>
+                            <View>
                                 {projects.map((proj: any) => (
-                                    <View key={proj.id}>
+                                    <View key={proj.id} style={{ marginBottom: 10 }}>
                                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                             <Text style={corporateStyles.itemTitle}>{proj.name}</Text>
-                                            {proj.technologies && (
-                                                <Text style={{ fontSize: 8, backgroundColor: '#f3f4f6', color: '#374151', padding: '1 3', borderRadius: 2, marginLeft: 5 }}>
+                                        </View>
+                                        {proj.technologies && (
+                                            <View style={{ marginTop: 2, marginBottom: 2 }}>
+                                                <Text style={corporateStyles.techTag}>
                                                     {proj.technologies}
                                                 </Text>
-                                            )}
-                                        </View>
-                                        <PdfFormattedText text={proj.description} style={{ fontSize: 9, color: '#4b5563', marginTop: 2 }} />
+                                            </View>
+                                        )}
+                                        <PdfFormattedText text={proj.description} style={corporateStyles.itemDesc} />
                                     </View>
                                 ))}
                             </View>
@@ -1696,31 +1735,59 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
         return (
             <Document>
                 <Page size="A4" style={corporateStyles.page}>
-                    <View style={corporateStyles.container}>
+                    <View style={corporateStyles.container} wrap={false}>
                         <View style={corporateStyles.sidebar}>
-                            <View style={corporateStyles.photoContainer}>
-                                <Text style={{ fontSize: 30, color: 'rgba(255,255,255,0.6)', fontWeight: 'bold' }}>
-                                    {personalInfo.fullName?.charAt(0) || '?'}
-                                </Text>
+                            <View style={[
+                                corporateStyles.photoContainer,
+                                {
+                                    borderRadius: 64,
+                                    borderTopWidth: (personalInfo.photoFilters?.borderWidth !== undefined && personalInfo.photoFilters?.borderWidth !== null) ? Number(personalInfo.photoFilters.borderWidth) : 0,
+                                    borderRightWidth: (personalInfo.photoFilters?.borderWidth !== undefined && personalInfo.photoFilters?.borderWidth !== null) ? Number(personalInfo.photoFilters.borderWidth) : 0,
+                                    borderBottomWidth: (personalInfo.photoFilters?.borderWidth !== undefined && personalInfo.photoFilters?.borderWidth !== null) ? Number(personalInfo.photoFilters.borderWidth) : 0,
+                                    borderLeftWidth: (personalInfo.photoFilters?.borderWidth !== undefined && personalInfo.photoFilters?.borderWidth !== null) ? Number(personalInfo.photoFilters.borderWidth) : 0,
+                                    borderColor: personalInfo.photoFilters?.borderColor || 'transparent',
+                                    borderStyle: 'solid',
+                                    overflow: 'hidden'
+                                }
+                            ]}>
+                                {personalInfo.photo ? (
+                                    <Image
+                                        src={personalInfo.photo}
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    />
+                                ) : (
+                                    <View style={{ width: '100%', height: '100%', backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}>
+                                        <Text style={{ fontSize: 30, color: 'rgba(255,255,255,0.6)', fontWeight: 'bold' }}>
+                                            {personalInfo.fullName?.charAt(0) || '?'}
+                                        </Text>
+                                    </View>
+                                )}
                             </View>
 
-                            {(personalInfo.email || personalInfo.phone || personalInfo.location) && (
+                            {(personalInfo.email || personalInfo.phone || personalInfo.location || personalInfo.website || personalInfo.linkedin || personalInfo.github) && (
                                 <View style={{ marginBottom: 15 }}>
-                                    <Text style={personalStyles.sidebarHeading}>Contact</Text>
-                                    <View style={{ gap: 6 }}>
-                                        {personalInfo.email && <Text style={personalStyles.sidebarText}>{personalInfo.email}</Text>}
-                                        {personalInfo.phone && <Text style={personalStyles.sidebarText}>{personalInfo.phone}</Text>}
-                                        {personalInfo.location && <Text style={personalStyles.sidebarText}>{personalInfo.location}</Text>}
+                                    <Text style={corporateStyles.sidebarHeading}>{sectionTitles.contact || "Contact"}</Text>
+                                    <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.3)', marginBottom: 9 }} />
+                                    <View>
+                                        {personalInfo.email && <Text style={[corporateStyles.sidebarText, { marginBottom: 6 }]}>{personalInfo.email}</Text>}
+                                        {personalInfo.phone && <Text style={[corporateStyles.sidebarText, { marginBottom: 6 }]}>{personalInfo.phone}</Text>}
+                                        {personalInfo.location && <Text style={[corporateStyles.sidebarText, { marginBottom: 6 }]}>{personalInfo.location}</Text>}
+                                        {personalInfo.website && <Text style={[corporateStyles.sidebarText, { marginBottom: 6 }]}>{personalInfo.website.replace(/^https?:\/\/(www\.)?/, '')}</Text>}
+                                        {personalInfo.linkedin && <Text style={[corporateStyles.sidebarText, { marginBottom: 6 }]}>{personalInfo.linkedin.replace(/^https?:\/\/(www\.)?/, '')}</Text>}
+                                        {personalInfo.github && <Text style={corporateStyles.sidebarText}>{personalInfo.github.replace(/^https?:\/\/(www\.)?/, '')}</Text>}
                                     </View>
                                 </View>
                             )}
 
                             {skills && (
                                 <View style={{ marginBottom: 15 }}>
-                                    <Text style={corporateStyles.sidebarHeading}>Skills</Text>
-                                    <View style={{ gap: 4 }}>
+                                    <Text style={corporateStyles.sidebarHeading}>{sectionTitles.skills || "Skills"}</Text>
+                                    <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.3)', marginBottom: 9 }} />
+                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
                                         {skills.split(',').map((skill, i) => (
-                                            <Text key={i} style={corporateStyles.sidebarText}>{skill.trim()}</Text>
+                                            <View key={i} style={{ backgroundColor: 'rgba(255,255,255,0.15)', padding: '3 8', borderRadius: 10, border: '1 solid rgba(255,255,255,0.25)' }}>
+                                                <Text style={{ fontSize: 9, color: '#FFFFFF' }}>{skill.trim()}</Text>
+                                            </View>
                                         ))}
                                     </View>
                                 </View>
@@ -1735,7 +1802,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
 
                             {personalInfo.summary && (
                                 <View style={{ marginBottom: 15 }}>
-                                    <Text style={personalStyles.mainHeading}>Summary</Text>
+                                    <Text style={personalStyles.mainHeading}>{sectionTitles.summary || "Summary"}</Text>
                                     <PdfFormattedText text={personalInfo.summary} style={{ fontSize: 9 * (sectionScales?.personal || 1), color: '#4b5563', lineHeight: 1.4 }} />
                                 </View>
                             )}
@@ -1743,7 +1810,7 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                             {sectionOrder.filter(id => !['personal', 'skills'].includes(id)).map(id => renderCorporateSection(id, false))}
                         </View>
                     </View>
-                    {isBrandingEnabled && <Text style={styles.branding} fixed>Powered by MyResume</Text>}
+                    {isBrandingEnabled && <Text style={styles.branding} fixed>Powered by LoneStar</Text>}
                 </Page>
             </Document>
         );
@@ -1751,8 +1818,8 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
 
     // --- EXECUTIVE TEMPLATE ---
     if (selectedTemplate === 'executive') {
-        const goldColor = '#c9a050';
-        const darkGray = themeColor || '#333333';
+        const goldColor = '#D1D5DB'; // Changed from #c9a050 to Gray
+        const darkGray = customThemeColor || '#333333';
         const personalStyles = getExecutiveStyles(sectionScales?.personal || 1);
 
         const renderExecutiveSection = (id: string) => {
@@ -1762,9 +1829,9 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 return (
                     <View key={id} style={{ marginBottom: 15 }}>
                         <Text style={executiveStyles.sectionTitle}>{customSection.title}</Text>
-                        <View style={{ gap: 8 }}>
+                        <View>
                             {customSection.items.map((item: any) => (
-                                <View key={item.id}>
+                                <View key={item.id} style={{ marginBottom: 8 }}>
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                                         <Text style={executiveStyles.itemTitle}>{item.name}</Text>
                                         <Text style={executiveStyles.itemDate}>{item.date}</Text>
@@ -1782,10 +1849,10 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'experience':
                     return experience.length > 0 && (
                         <View key="experience" style={{ marginBottom: 15 }}>
-                            <Text style={executiveStyles.sectionTitle}>Work Experience</Text>
-                            <View style={{ gap: 12 }}>
+                            <Text style={executiveStyles.sectionTitle}>{sectionTitles.experience || "Professional Experience"}</Text>
+                            <View>
                                 {experience.map((exp: any) => (
-                                    <View key={exp.id}>
+                                    <View key={exp.id} style={{ marginBottom: 12 }}>
                                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                                             <View style={{ flexDirection: 'row', gap: 5 }}>
                                                 <Text style={{ fontSize: 10, fontWeight: 'bold' }}>{exp.company}</Text>
@@ -1803,10 +1870,10 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'education':
                     return education.length > 0 && (
                         <View key="education" style={{ marginBottom: 15 }}>
-                            <Text style={executiveStyles.sectionTitle}>Education</Text>
-                            <View style={{ gap: 10 }}>
+                            <Text style={executiveStyles.sectionTitle}>{sectionTitles.education || "Education"}</Text>
+                            <View>
                                 {education.map((edu: any) => (
-                                    <View key={edu.id}>
+                                    <View key={edu.id} style={{ marginBottom: 10 }}>
                                         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                                             <Text style={{ fontSize: 10, fontWeight: 'bold' }}>{edu.school}</Text>
                                             <Text style={{ fontSize: 9, color: '#666' }}>{edu.startDate} - {edu.endDate}</Text>
@@ -1820,18 +1887,16 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
                 case 'projects':
                     return projects.length > 0 && (
                         <View key="projects" style={{ marginBottom: 15 }}>
-                            <Text style={executiveStyles.sectionTitle}>Projects</Text>
-                            <View style={{ gap: 10 }}>
+                            <Text style={executiveStyles.sectionTitle}>{sectionTitles.projects || "Projects"}</Text>
+                            <View>
                                 {projects.map((proj: any) => (
-                                    <View key={proj.id}>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                            <Text style={{ fontSize: 10, fontWeight: 'bold' }}>{proj.name}</Text>
-                                            {proj.technologies && (
-                                                <Text style={{ fontSize: 8, color: '#6b7280', padding: '1 3', marginLeft: 5 }}>
-                                                    | {proj.technologies}
-                                                </Text>
-                                            )}
-                                        </View>
+                                    <View key={proj.id} style={{ marginBottom: 10 }}>
+                                        <Text style={{ fontSize: 10, fontWeight: 'bold' }}>{proj.name}</Text>
+                                        {proj.technologies && (
+                                            <Text style={{ fontSize: 8, color: goldColor, marginTop: 1, marginBottom: 1 }}>
+                                                {proj.technologies}
+                                            </Text>
+                                        )}
                                         <PdfFormattedText text={proj.description} style={{ fontSize: 9, color: '#4b5563', marginTop: 2 }} />
                                     </View>
                                 ))}
@@ -1845,80 +1910,232 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
         return (
             <Document>
                 <Page size="A4" style={executiveStyles.page}>
-                    {/* Header */}
-                    <View style={{ ...executiveStyles.header, backgroundColor: darkGray }}>
-                        <View style={executiveStyles.photo}>
-                            <Text style={{ color: 'white', fontSize: 24, textAlign: 'center', marginTop: 15 }}>
-                                {personalInfo.fullName?.charAt(0)}
-                            </Text>
+                    <View style={{ width: '100%', height: '100%' }} wrap={false}>
+                        {/* Header */}
+                        <View style={{ ...executiveStyles.header, backgroundColor: darkGray }}>
+                            <View style={{
+                                ...executiveStyles.photo,
+                                borderWidth: (personalInfo.photoFilters?.borderWidth !== undefined && personalInfo.photoFilters?.borderWidth !== null) ? Number(personalInfo.photoFilters.borderWidth) : 2,
+                                borderColor: personalInfo.photoFilters?.borderColor || '#c9a050',
+                                borderStyle: 'solid'
+                            }}>
+                                {personalInfo.photo ? (
+                                    <Image
+                                        src={personalInfo.photo}
+                                        style={{ width: '100%', height: '100%', borderRadius: 6, objectFit: 'cover' }}
+                                    />
+                                ) : (
+                                    <View style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                                        <Text style={{ color: 'white', fontSize: 24, textAlign: 'center' }}>
+                                            {personalInfo.fullName?.charAt(0)}
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+                            <View>
+                                <Text style={personalStyles.headerName}>{personalInfo.fullName}</Text>
+                                <Text style={personalStyles.headerRole}>{personalInfo.jobTitle}</Text>
+                            </View>
                         </View>
-                        <View>
-                            <Text style={personalStyles.headerName}>{personalInfo.fullName}</Text>
-                            <Text style={personalStyles.headerRole}>{personalInfo.jobTitle}</Text>
+
+                        <View style={executiveStyles.body}>
+                            {/* Main Content (65%) */}
+                            <View style={executiveStyles.main}>
+                                {personalInfo.summary && (
+                                    <View style={{ marginBottom: 15 }}>
+                                        <Text style={personalStyles.sectionTitle}>{sectionTitles.summary || "Profile"}</Text>
+                                        <PdfFormattedText text={personalInfo.summary} style={{ fontSize: 9 * (sectionScales?.personal || 1), color: '#4b5563', lineHeight: 1.5 }} />
+                                    </View>
+                                )}
+                                {sectionOrder.filter(id => !['personal', 'skills'].includes(id)).map(id => renderExecutiveSection(id))}
+                            </View>
+
+                            {/* Sidebar (35%) */}
+                            <View style={executiveStyles.sidebar}>
+                                {/* Contact */}
+                                {(personalInfo.email || personalInfo.phone || personalInfo.location) && (
+                                    <View style={{ marginBottom: 15 }}>
+                                        <Text style={personalStyles.sidebarTitle}>{sectionTitles.contact || "Contact"}</Text>
+                                        <View style={{ height: 1, backgroundColor: goldColor, marginBottom: 9 }} />
+                                        <View style={{ gap: 4 }}>
+                                            {personalInfo.email && <Text style={{ fontSize: 9 * (sectionScales?.personal || 1) }}>{personalInfo.email}</Text>}
+                                            {personalInfo.phone && <Text style={{ fontSize: 9 * (sectionScales?.personal || 1) }}>{personalInfo.phone}</Text>}
+                                            {personalInfo.location && <Text style={{ fontSize: 9 * (sectionScales?.personal || 1) }}>{personalInfo.location}</Text>}
+                                            {personalInfo.website && <Text style={{ fontSize: 9 * (sectionScales?.personal || 1) }}>{personalInfo.website.replace(/^https?:\/\/(www\.)?/, '')}</Text>}
+                                            {personalInfo.linkedin && <Text style={{ fontSize: 9 * (sectionScales?.personal || 1) }}>LI: {personalInfo.linkedin.replace(/^https?:\/\/(www\.)?/, '')}</Text>}
+                                            {personalInfo.github && <Text style={{ fontSize: 9 * (sectionScales?.personal || 1) }}>GH: {personalInfo.github.replace(/^https?:\/\/(www\.)?/, '')}</Text>}
+                                        </View>
+                                    </View>
+                                )}
+                            </View>
                         </View>
                     </View>
-
-                    <View style={executiveStyles.body}>
-                        {/* Main Content (65%) */}
-                        <View style={executiveStyles.main}>
-                            {personalInfo.summary && (
-                                <View style={{ marginBottom: 15 }}>
-                                    <Text style={personalStyles.sectionTitle}>Profile</Text>
-                                    <PdfFormattedText text={personalInfo.summary} style={{ fontSize: 9 * (sectionScales?.personal || 1), color: '#4b5563', lineHeight: 1.5 }} />
-                                </View>
-                            )}
-                            {sectionOrder.filter(id => !['personal', 'skills'].includes(id)).map(id => renderExecutiveSection(id))}
-                        </View>
-
-                        {/* Sidebar (35%) */}
-                        <View style={{ ...executiveStyles.sidebar, backgroundColor: '#FFFFFF', color: '#000000' }}>
-                            {/* Contact */}
-                            {(personalInfo.email || personalInfo.phone || personalInfo.location) && (
-                                <View style={{ marginBottom: 15 }}>
-                                    <Text style={personalStyles.sidebarTitle}>Contact</Text>
-                                    <View style={{ gap: 4 }}>
-                                        {personalInfo.email && <Text style={{ fontSize: 9 * (sectionScales?.personal || 1) }}>{personalInfo.email}</Text>}
-                                        {personalInfo.phone && <Text style={{ fontSize: 9 * (sectionScales?.personal || 1) }}>{personalInfo.phone}</Text>}
-                                        {personalInfo.location && <Text style={{ fontSize: 9 * (sectionScales?.personal || 1) }}>{personalInfo.location}</Text>}
-                                        {personalInfo.website && <Text style={{ fontSize: 9 * (sectionScales?.personal || 1) }}>{personalInfo.website}</Text>}
-                                    </View>
-                                </View>
-                            )}
-
-                            {/* Skills */}
-                            {skills && (
-                                <View style={{ marginBottom: 15 }}>
-                                    <Text style={executiveStyles.sidebarTitle}>Skills</Text>
-                                    <View style={{ gap: 4 }}>
-                                        {skills.split(',').map((skill, i) => (
-                                            <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                                                <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: goldColor }} />
-                                                <Text style={{ fontSize: 9 }}>{skill.trim()}</Text>
-                                            </View>
-                                        ))}
-                                    </View>
-                                </View>
-                            )}
-
-                            {/* Links */}
-                            {(personalInfo.linkedin || personalInfo.github) && (
-                                <View style={{ marginBottom: 15 }}>
-                                    <Text style={executiveStyles.sidebarTitle}>Links</Text>
-                                    <View style={{ gap: 4 }}>
-                                        {personalInfo.linkedin && <Text style={{ fontSize: 9 }}>LI: {personalInfo.linkedin}</Text>}
-                                        {personalInfo.github && <Text style={{ fontSize: 9 }}>GH: {personalInfo.github}</Text>}
-                                    </View>
-                                </View>
-                            )}
-                        </View>
-                    </View>
-                    {isBrandingEnabled && <Text style={styles.branding} fixed>Powered by MyResume</Text>}
+                    {isBrandingEnabled && <Text style={styles.branding} fixed>Powered by LoneStar</Text>}
                 </Page>
             </Document>
         );
     }
 
 
+
+
+    // --- DESIGNER TEMPLATE ---
+    if (selectedTemplate === 'designer') {
+        const designerStyles = getDesignerStyles(sectionScales?.personal || 1);
+
+        const renderDesignerSection = (id: string, isLeft: boolean) => {
+            const sectionStyles = getDesignerStyles(sectionScales?.[id] || 1);
+            const customSection = data.customSections?.find(s => s.id === id);
+            const titleStyle = isLeft ? sectionStyles.sectionTitle : sectionStyles.sectionTitleRight;
+
+            if (customSection) {
+                return (
+                    <View key={id} style={{ marginBottom: 20 }}>
+                        <Text style={titleStyle}>{customSection.title}</Text>
+                        {customSection.items.map((item: any) => (
+                            <View key={item.id} style={{ marginBottom: 10 }}>
+                                <Text style={{ fontWeight: 'bold', fontSize: 10, color: isLeft ? 'white' : '#333' }}>{item.name}</Text>
+                                <Text style={{ fontSize: 9, color: isLeft ? 'rgba(255,255,255,0.7)' : '#666' }}>{item.date}</Text>
+                                <PdfFormattedText text={item.description} style={{ fontSize: 9, color: isLeft ? 'rgba(255,255,255,0.9)' : '#4b5563', marginTop: 2 }} />
+                            </View>
+                        ))}
+                    </View>
+                );
+            }
+
+            switch (id) {
+                case 'education':
+                    return education.length > 0 && (
+                        <View key="education" style={{ marginBottom: 20 }}>
+                            <Text style={titleStyle}>{sectionTitles.education || "Education"}</Text>
+                            {education.map((edu: any) => (
+                                <View key={edu.id} style={{ marginBottom: 10 }}>
+                                    <Text style={{ fontWeight: 'bold', fontSize: 10, color: isLeft ? 'white' : '#333' }}>{edu.school}</Text>
+                                    <Text style={{ fontSize: 9, color: isLeft ? 'rgba(255,255,255,0.9)' : '#555' }}>{edu.degree}</Text>
+                                    <Text style={{ fontSize: 9, color: isLeft ? 'rgba(255,255,255,0.7)' : '#666' }}>{edu.startDate} - {edu.endDate}</Text>
+                                </View>
+                            ))}
+                        </View>
+                    );
+                case 'skills':
+                    return skills && (
+                        <View key="skills" style={{ marginBottom: 20 }}>
+                            <Text style={titleStyle}>{sectionTitles.skills || "Skills"}</Text>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                                {skills.split(',').map((skill, i) => (
+                                    <View key={i} style={sectionStyles.skillPill}>
+                                        <Text style={sectionStyles.skillText}>{skill.trim()}</Text>
+                                    </View>
+                                ))}
+                            </View>
+                        </View>
+                    );
+                case 'experience':
+                    return experience.length > 0 && (
+                        <View key="experience" style={{ marginBottom: 20 }}>
+                            <Text style={titleStyle}>{sectionTitles.experience || "Experience"}</Text>
+                            {experience.map((exp: any) => (
+                                <View key={exp.id} style={{ marginBottom: 15 }}>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+                                        <Text style={{ fontWeight: 'bold', fontSize: 11, color: isLeft ? 'white' : '#333' }}>{exp.company}</Text>
+                                        <Text style={{ fontSize: 9, color: isLeft ? 'rgba(255,255,255,0.7)' : '#666' }}>{exp.startDate} - {exp.endDate}</Text>
+                                    </View>
+                                    <Text style={{ fontSize: 10, fontWeight: 'bold', color: isLeft ? 'rgba(255,255,255,0.9)' : '#555', marginBottom: 4 }}>{exp.role}</Text>
+                                    <PdfFormattedText text={exp.description} style={{ fontSize: 9, color: isLeft ? 'rgba(255,255,255,0.8)' : '#4b5563', lineHeight: 1.4 }} />
+                                </View>
+                            ))}
+                        </View>
+                    );
+                case 'projects':
+                    return projects.length > 0 && (
+                        <View key="projects" style={{ marginBottom: 20 }}>
+                            <Text style={titleStyle}>{sectionTitles.projects || "Projects"}</Text>
+                            {projects.map((proj: any) => (
+                                <View key={proj.id} style={{ marginBottom: 12 }}>
+                                    <Text style={{ fontWeight: 'bold', fontSize: 10, color: isLeft ? 'white' : '#333' }}>{proj.name}</Text>
+                                    {proj.technologies && (
+                                        <Text style={{ fontSize: 9, color: isLeft ? 'rgba(255,255,255,0.7)' : '#666', marginBottom: 2 }}>{proj.technologies}</Text>
+                                    )}
+                                    <PdfFormattedText text={proj.description} style={{ fontSize: 9, color: isLeft ? 'rgba(255,255,255,0.8)' : '#4b5563' }} />
+                                    {proj.link && (
+                                        <Link src={proj.link} style={{ fontSize: 9, color: isLeft ? '#8ab4f8' : '#2563eb', marginTop: 2, textDecoration: 'none' }}>
+                                            {proj.linkText || "View Project"}
+                                        </Link>
+                                    )}
+                                </View>
+                            ))}
+                        </View>
+                    );
+                default: return null;
+            }
+        };
+
+        const leftSections = ['skills', 'education', 'contact'];
+        const rightSections = sectionOrder.filter(id => !leftSections.includes(id) && id !== 'personal');
+        const leftSectionsToMap = sectionOrder.filter(id => leftSections.includes(id) && id !== 'contact');
+
+        return (
+            <Document>
+                <Page size="A4" style={designerStyles.page}>
+                    <View style={designerStyles.body} wrap={false}>
+                        {/* Left Column (Dark) */}
+                        <View style={designerStyles.leftCol}>
+                            <View style={{ alignItems: 'center', marginBottom: 30 }}>
+                                <View style={{
+                                    ...designerStyles.photo,
+                                    borderWidth: (personalInfo.photoFilters?.borderWidth !== undefined && personalInfo.photoFilters?.borderWidth !== null) ? Number(personalInfo.photoFilters.borderWidth) : 3,
+                                    borderColor: personalInfo.photoFilters?.borderColor || '#FFFFFF',
+                                    borderStyle: 'solid'
+                                }}>
+                                    {personalInfo.photo ? (
+                                        <Image
+                                            src={personalInfo.photo}
+                                            style={{ width: '100%', height: '100%', borderRadius: 42, objectFit: 'cover' }}
+                                        />
+                                    ) : (
+                                        <Text style={{ color: 'white', fontSize: 30, textAlign: 'center', marginTop: 20, fontWeight: 'bold' }}>
+                                            {personalInfo.fullName?.charAt(0)}
+                                        </Text>
+                                    )}
+                                </View>
+                            </View>
+
+                            <View style={{ marginBottom: 30 }}>
+                                <Text style={designerStyles.sectionTitle}>{sectionTitles.contact || "Contact"}</Text>
+                                <View style={{ gap: 6 }}>
+                                    {[personalInfo.email, personalInfo.phone, personalInfo.location, personalInfo.website, personalInfo.linkedin, personalInfo.github]
+                                        .filter(Boolean).map((item, i) => (
+                                            <Text key={i} style={{ fontSize: 9, color: 'rgba(255,255,255,0.8)' }}>{item}</Text>
+                                        ))}
+                                </View>
+                            </View>
+
+                            {leftSectionsToMap.map(id => renderDesignerSection(id, true))}
+                            {data.customSections?.map(s => renderDesignerSection(s.id, true))}
+                        </View>
+
+                        {/* Right Column (Light) */}
+                        <View style={designerStyles.rightCol}>
+                            <View style={{ backgroundColor: '#f5f0e8', padding: 20, margin: -24, marginBottom: 24 }}>
+                                <Text style={designerStyles.name}>{personalInfo.fullName}</Text>
+                                <Text style={designerStyles.role}>{personalInfo.jobTitle}</Text>
+                            </View>
+
+                            {personalInfo.summary && (
+                                <View style={{ marginBottom: 20 }}>
+                                    <Text style={designerStyles.sectionTitleRight}>{sectionTitles.summary || "Profile"}</Text>
+                                    <PdfFormattedText text={personalInfo.summary} style={{ fontSize: 9, lineHeight: 1.5, color: '#4b5563' }} />
+                                </View>
+                            )}
+
+                            {rightSections.map(id => renderDesignerSection(id, false))}
+                        </View>
+                    </View>
+                    {isBrandingEnabled && <Text style={styles.branding} fixed>Powered by LoneStar</Text>}
+                </Page>
+            </Document>
+        )
+    }
 
     // --- CLASSIC TEMPLATE (Default) ---
     const renderClassicSection = (id: string) => {
@@ -1946,29 +2163,35 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             case 'education':
                 return education.length > 0 && (
                     <View key="education" style={classicStyles.itemGroup}>
-                        <Text style={classicStyles.sectionTitle}>Education</Text>
-                        {education.map((edu: any) => (
-                            <View key={edu.id} style={{ marginBottom: 5 }}>
-                                <View style={classicStyles.row}>
+                        <Text style={classicStyles.sectionTitle}>{sectionTitles.education || "Education"}</Text>
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                            {education.map((edu: any) => (
+                                <View key={edu.id} style={{ flexDirection: 'row', alignItems: 'baseline', gap: 3 }}>
                                     <Text style={classicStyles.bold}>{edu.school}</Text>
-                                    <Text style={classicStyles.text}>{edu.startDate} - {edu.endDate}</Text>
+                                    <Text style={classicStyles.italic}>{edu.degree}</Text>
+                                    <Text style={{ fontSize: 9, color: '#6b7280' }}>({edu.startDate} - {edu.endDate})</Text>
                                 </View>
-                                <Text style={classicStyles.italic}>{edu.degree}</Text>
-                            </View>
-                        ))}
+                            ))}
+                        </View>
                     </View>
                 );
             case 'skills':
                 return skills && (
                     <View key="skills" style={classicStyles.itemGroup}>
-                        <Text style={classicStyles.sectionTitle}>Skills</Text>
-                        <Text style={classicStyles.text}>{skills}</Text>
+                        <Text style={classicStyles.sectionTitle}>{sectionTitles.skills || "Skills"}</Text>
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                            {skills.split(',').map((skill: string, i: number) => (
+                                <View key={i} style={{ backgroundColor: '#f3f4f6', padding: '3 10', borderRadius: 12 }}>
+                                    <Text style={{ fontSize: 10, color: '#374151' }}>{skill.trim()}</Text>
+                                </View>
+                            ))}
+                        </View>
                     </View>
                 );
             case 'experience':
                 return experience.length > 0 && (
                     <View key="experience" style={classicStyles.itemGroup}>
-                        <Text style={classicStyles.sectionTitle}>Experience</Text>
+                        <Text style={classicStyles.sectionTitle}>{sectionTitles.experience || "Professional Experience"}</Text>
                         {experience.map((exp: any) => (
                             <View key={exp.id} style={{ marginBottom: 8 }}>
                                 <View style={classicStyles.row}>
@@ -1984,21 +2207,23 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
             case 'projects':
                 return projects.length > 0 && (
                     <View key="projects" style={classicStyles.itemGroup}>
-                        <Text style={classicStyles.sectionTitle}>Projects</Text>
+                        <Text style={classicStyles.sectionTitle}>{sectionTitles.projects || "Projects"}</Text>
                         {projects.map((proj: any) => (
                             <View key={proj.id} style={{ marginBottom: 8 }}>
                                 <View style={classicStyles.row}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        <Text style={classicStyles.bold}>{proj.name}</Text>
-                                        {proj.technologies && (
-                                            <Text style={{ fontSize: 9, backgroundColor: '#f3f4f6', color: '#6b7280', padding: '1 3', borderRadius: 2, marginLeft: 5 }}>
-                                                {proj.technologies}
-                                            </Text>
-                                        )}
-                                    </View>
+                                    <Text style={classicStyles.bold}>{proj.name}</Text>
+                                    {proj.link && (
+                                        <Link src={proj.link} style={{ fontSize: 9, color: 'blue', textDecoration: 'none' }}>
+                                            {proj.linkText || "View Project"}
+                                        </Link>
+                                    )}
                                 </View>
+                                {proj.technologies && (
+                                    <Text style={{ fontSize: 9, color: '#4b5563', fontStyle: 'italic', marginBottom: 2 }}>
+                                        {proj.technologies}
+                                    </Text>
+                                )}
                                 <PdfFormattedText text={proj.description} style={classicStyles.text} />
-                                {proj.link && <Text style={{ fontSize: 9, color: 'blue' }}>{proj.link}</Text>}
                             </View>
                         ))}
                     </View>
@@ -2012,29 +2237,34 @@ export const ResumeDocument = ({ data, userTier = 'free' }: { data: ResumeData, 
     return (
         <Document>
             <Page size="A4" style={classicStyles.page}>
-                <View style={classicStyles.header}>
-                    <Text style={personalStyles.name}>{personalInfo.fullName}</Text>
-                    <Text style={personalStyles.contact}>
-                        {[
-                            personalInfo.email,
-                            personalInfo.phone,
-                            personalInfo.location,
-                            personalInfo.linkedin
-                        ].filter(Boolean).join(' | ')}
-                    </Text>
+                <View style={{ width: '100%', height: '100%' }} wrap={false}>
+                    <View style={classicStyles.header}>
+                        <Text style={personalStyles.name}>{personalInfo.fullName}</Text>
+                        {personalInfo.jobTitle && <Text style={{ fontSize: 14, color: '#4b5563', marginBottom: 8, textTransform: 'uppercase' }}>{personalInfo.jobTitle}</Text>}
+                        <Text style={personalStyles.contact}>
+                            {[
+                                personalInfo.email,
+                                personalInfo.phone,
+                                personalInfo.location,
+                                personalInfo.website,
+                                personalInfo.linkedin,
+                                personalInfo.github
+                            ].filter(Boolean).join(' | ')}
+                        </Text>
+                    </View>
+
+                    {personalInfo.summary && (
+                        <View style={classicStyles.itemGroup}>
+                            <Text style={personalStyles.sectionTitle}>Professional Summary</Text>
+                            <PdfFormattedText text={personalInfo.summary} style={personalStyles.text} />
+                        </View>
+                    )}
+
+                    {sectionOrder.map(renderClassicSection)}
                 </View>
 
-                {personalInfo.summary && (
-                    <View style={classicStyles.itemGroup}>
-                        <Text style={personalStyles.sectionTitle}>Professional Summary</Text>
-                        <PdfFormattedText text={personalInfo.summary} style={personalStyles.text} />
-                    </View>
-                )}
-
-                {sectionOrder.map(renderClassicSection)}
-
                 {isBrandingEnabled && (
-                    <Text style={classicStyles.branding} fixed>Powered by MyResume</Text>
+                    <Text style={classicStyles.branding} fixed>Powered by LoneStar</Text>
                 )}
             </Page>
         </Document>

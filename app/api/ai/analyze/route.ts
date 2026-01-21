@@ -1,8 +1,7 @@
-
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { generateObject } from "ai";
+import { z } from "zod";
 import { NextResponse } from "next/server";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function POST(req: Request) {
     try {
@@ -15,9 +14,29 @@ export async function POST(req: Request) {
             );
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        const google = createGoogleGenerativeAI({
+            apiKey: process.env.GEMINI_API_KEY
+        });
 
-        const prompt = `
+        const result = await generateObject({
+            model: google("gemini-2.0-flash"),
+            schema: z.object({
+                score: z.number().min(0).max(100),
+                category_scores: z.object({
+                    impact: z.number().min(0).max(100),
+                    brevity: z.number().min(0).max(100),
+                    style: z.number().min(0).max(100),
+                    structure: z.number().min(0).max(100),
+                }),
+                keywords: z.object({
+                    found: z.array(z.string()),
+                    missing: z.array(z.string()),
+                }),
+                feedback: z.array(z.string()),
+                red_flags: z.array(z.string()),
+                summary: z.string(),
+            }),
+            prompt: `
             Act as a strict, professional Applicant Tracking System (ATS) and expert Resume Coach.
             Analyze the following resume JSON data against professional standards${jobDescription ? ' and the provided Job Description' : ''}.
 
@@ -26,40 +45,11 @@ export async function POST(req: Request) {
 
             ${jobDescription ? `Target Job Description:\n${jobDescription}` : ''}
 
-            Provide a detailed analysis in the following JSON format ONLY:
-            {
-                "score": number (0-100),
-                "category_scores": {
-                    "impact": number (0-100, focus on metrics/results),
-                    "brevity": number (0-100, conciseness),
-                    "style": number (0-100, active verbs, professionalism),
-                    "structure": number (0-100, completeness)
-                },
-                "keywords": {
-                    "found": string[],
-                    "missing": string[] (important keywords from JD or industry standards that are missing)
-                },
-                "feedback": [
-                    "Detailed, actionable string 1",
-                    "Detailed, actionable string 2"
-                ],
-                "red_flags": [
-                    "Critical issue 1 (e.g., spelling errors, formatting issues)"
-                ],
-                "summary": "A brief 2-sentence professional summary of the resume's strength."
-            }
-        `;
-
-        const result = await model.generateContent({
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: "application/json" }
+            Provide a detailed analysis.
+            `,
         });
 
-        const response = await result.response;
-        const text = response.text();
-        const data = JSON.parse(text);
-
-        return NextResponse.json(data);
+        return NextResponse.json(result.object);
 
     } catch (error: any) {
         console.error("ATS Analysis Error:", error);

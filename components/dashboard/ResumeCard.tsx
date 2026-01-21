@@ -64,7 +64,7 @@ export function ResumeCard({ resume, onDelete, onDuplicate }: ResumeCardProps) {
                     )}
                 </div>
             </CardContent>
-            <CardFooter className="pt-3 border-t bg-muted/20 gap-2">
+            <CardFooter className="pt-3 border-t bg-muted/20 gap-3">
                 <Link href={`/editor`} className="flex-1">
                     <Button variant="default" className="w-full">
                         <Edit className="mr-2 h-4 w-4" />
@@ -72,7 +72,7 @@ export function ResumeCard({ resume, onDelete, onDuplicate }: ResumeCardProps) {
                     </Button>
                 </Link>
 
-                <Button variant="outline" size="icon" onClick={() => onDuplicate(resume.id)} title="Duplicate">
+                <Button variant="outline" size="icon" onClick={() => onDuplicate(resume.id)} title="Duplicate" className="h-11 w-11">
                     <Copy className="h-4 w-4" />
                 </Button>
 
@@ -82,13 +82,13 @@ export function ResumeCard({ resume, onDelete, onDuplicate }: ResumeCardProps) {
                         fileName={`${resume.name.replace(/\s+/g, '_')}.pdf`}
                         variant="outline"
                         size="icon"
-                        className="h-10 w-10 p-0"
+                        className="h-11 w-11 p-0"
                     />
                 </div>
 
                 <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button variant="destructive" size="icon" title="Delete">
+                        <Button variant="destructive" size="icon" title="Delete" className="h-11 w-11">
                             <Trash2 className="h-4 w-4" />
                         </Button>
                     </DialogTrigger>

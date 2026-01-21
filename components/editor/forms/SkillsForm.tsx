@@ -1,145 +1,252 @@
 "use client";
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useResumeStore } from "@/store/useResumeStore";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, Plus } from "lucide-react";
+import { X, Plus, GripHorizontal } from "lucide-react";
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+} from "@dnd-kit/core";
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    rectSortingStrategy,
+    useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
-import { SectionScaleControl } from "../SectionScaleControl";
+const POPULAR_SKILLS = [
+    "JavaScript", "TypeScript", "React", "Node.js", "Python", "Java", "C++", "C#",
+    "HTML", "CSS", "SQL", "MongoDB", "PostgreSQL", "MySQL", "Git", "Docker",
+    "Kubernetes", "AWS", "Azure", "GCP", "Angular", "Vue.js", "Next.js", "Express.js",
+    "Django", "Flask", "Spring Boot", "REST API", "GraphQL", "Redis", "Agile",
+    "Scrum", "CI/CD", "Jenkins", "Linux", "Bash", "PowerShell", "TensorFlow",
+    "PyTorch", "Machine Learning", "Deep Learning", "Data Analysis", "Pandas",
+    "NumPy", "R", "Tableau", "Power BI", "Excel", "Figma", "Adobe XD", "Photoshop"
+];
 
-export function SkillsForm() {
-    const { resumes, activeResumeId, setSkills } = useResumeStore();
-    const activeResume = activeResumeId ? resumes[activeResumeId] : null;
+function SortableSkillBadge({ skill, onRemove }: { skill: string, onRemove: (s: string) => void }) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id: skill });
 
-    // Parse initial skills from string to array
-    const [input, setInput] = React.useState("");
-    const [showDropdown, setShowDropdown] = React.useState(false);
-
-    // Get skills as array, filtering empty strings
-    const currentSkills = React.useMemo(() => {
-        if (!activeResume?.skills) return [];
-        return activeResume.skills.split(',').map(s => s.trim()).filter(Boolean);
-    }, [activeResume?.skills]);
-
-    const handleAddSkill = (skill: string) => {
-        const trimmed = skill.trim();
-        if (!trimmed || currentSkills.includes(trimmed)) {
-            setInput("");
-            setShowDropdown(false);
-            return;
-        }
-        const newSkills = [...currentSkills, trimmed].join(', ');
-        setSkills(newSkills);
-        setInput("");
-        setShowDropdown(false);
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
     };
-
-    const handleRemoveSkill = (skillToRemove: string) => {
-        const newSkills = currentSkills.filter(s => s !== skillToRemove).join(', ');
-        setSkills(newSkills);
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            handleAddSkill(input);
-        }
-    };
-
-    // Filter popular skills
-    const filteredSuggestions = POPULAR_SKILLS.filter(
-        skill =>
-            skill.toLowerCase().includes(input.toLowerCase()) &&
-            !currentSkills.includes(skill)
-    ).slice(0, 10); // Limit to top 10
 
     return (
-        <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Skills</h2>
-
-            <SectionScaleControl sectionId="skills" />
-
-            {/* Input Area */}
-            <div className="space-y-3">
-                <Label>Add Skills</Label>
-                <div className="relative">
-                    <div className="flex gap-2">
-                        <Input
-                            value={input}
-                            onChange={(e) => {
-                                setInput(e.target.value);
-                                setShowDropdown(true);
-                            }}
-                            onKeyDown={handleKeyDown}
-                            onFocus={() => setShowDropdown(true)}
-                            onBlur={() => setTimeout(() => setShowDropdown(false), 200)} // Delay to allow click
-                            placeholder="Type a skill (e.g. React, Leadership)..."
-                            className="flex-1"
-                        />
-                        <Button
-                            onClick={() => handleAddSkill(input)}
-                            disabled={!input.trim()}
-                            size="icon"
-                            variant="outline"
-                        >
-                            <Plus className="h-4 w-4" />
-                        </Button>
-                    </div>
-
-                    {/* Suggestions Dropdown */}
-                    {showDropdown && input && filteredSuggestions.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-                            <ul className="py-1">
-                                {filteredSuggestions.map(skill => (
-                                    <li
-                                        key={skill}
-                                        onClick={() => handleAddSkill(skill)}
-                                        className="px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer flex items-center gap-2"
-                                    >
-                                        <Plus className="h-3 w-3 opacity-50" />
-                                        {skill}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-                </div>
-
-                {/* Selected Skills Tags */}
-                <div className="flex flex-wrap gap-2 min-h-[40px] p-1">
-                    {currentSkills.length === 0 && (
-                        <span className="text-sm text-muted-foreground italic">No skills added yet.</span>
-                    )}
-                    {currentSkills.map((skill, i) => (
-                        <div
-                            key={i}
-                            className="bg-primary/10 text-primary hover:bg-primary/20 transition-colors px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 group"
-                        >
-                            {skill}
-                            <button
-                                onClick={() => handleRemoveSkill(skill)}
-                                className="hover:bg-destructive hover:text-destructive-foreground rounded-full p-0.5 transition-colors ml-1"
-                            >
-                                <X className="h-3 w-3" />
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            </div>
-            <p className="text-xs text-muted-foreground">
-                Tip: Press Enter to add a custom skill.
-            </p>
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+            <Badge variant="secondary" className="pl-3 pr-1 py-1.5 gap-1 cursor-grab active:cursor-grabbing hover:bg-secondary/80">
+                {skill}
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-4 w-4 hover:bg-destructive/20 rounded-full ml-1"
+                    onClick={(e) => {
+                        e.stopPropagation(); // Prevent drag start when clicking remove
+                        onRemove(skill);
+                    }}
+                    onPointerDown={(e) => e.stopPropagation()} // Prevent drag start
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.stopPropagation();
+                            onRemove(skill);
+                        }
+                    }}
+                >
+                    <X className="h-3 w-3" />
+                </Button>
+            </Badge>
         </div>
     );
 }
 
-const POPULAR_SKILLS = [
-    "JavaScript", "TypeScript", "React", "Next.js", "Node.js", "Python", "Java", "C++", "C#",
-    "SQL", "PostgreSQL", "MongoDB", "AWS", "Docker", "Kubernetes", "Git", "GitHub", "CI/CD",
-    "HTML5", "CSS3", "Tailwind CSS", "Sass", "Redux", "GraphQL", "REST API",
-    "Agile", "Scrum", "Project Management", "Communication", "Leadership", "Problem Solving",
-    "Figma", "Adobe XD", "UI/UX Design", "Machine Learning", "Data Analysis", "Go", "Rust",
-    "Flutter", "React Native", "Swift", "Kotlin", "Firebase", "Azure", "Google Cloud",
-    "Linux", "Cybersecurity", "Testing", "Jest", "Cypress", "SEO", "Performance Optimization"
-];
+export function SkillsForm() {
+    const { resumes, activeResumeId, setSkills } = useResumeStore();
+    const activeResume = activeResumeId ? resumes[activeResumeId] : null;
+    const [searchText, setSearchText] = useState("");
+    const [showDropdown, setShowDropdown] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    if (!activeResume) return null;
+
+    const selectedSkills = activeResume.skills
+        ? activeResume.skills.split(',').map(s => s.trim()).filter(Boolean)
+        : [];
+
+    // Filter out duplicates for display logic only
+    const uniqueSelectedSkills = Array.from(new Set(selectedSkills));
+
+    const filteredSkills = POPULAR_SKILLS.filter(
+        skill =>
+            skill.toLowerCase().includes(searchText.toLowerCase()) &&
+            !uniqueSelectedSkills.includes(skill)
+    );
+
+    const addSkill = (skill: string) => {
+        const trimmedSkill = skill.trim();
+        if (trimmedSkill && !uniqueSelectedSkills.includes(trimmedSkill)) {
+            const newSkills = [...uniqueSelectedSkills, trimmedSkill].join(', ');
+            setSkills(newSkills);
+            setSearchText("");
+            setShowDropdown(false);
+        }
+    };
+
+    const removeSkill = (skillToRemove: string) => {
+        const newSkills = uniqueSelectedSkills
+            .filter(skill => skill !== skillToRemove)
+            .join(', ');
+        setSkills(newSkills);
+    };
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (over && active.id !== over.id) {
+            const oldIndex = uniqueSelectedSkills.indexOf(active.id as string);
+            const newIndex = uniqueSelectedSkills.indexOf(over.id as string);
+
+            if (oldIndex !== -1 && newIndex !== -1) {
+                const newOrder = arrayMove(uniqueSelectedSkills, oldIndex, newIndex);
+                setSkills(newOrder.join(', '));
+            }
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && searchText.trim()) {
+            e.preventDefault();
+            const skillToAdd = filteredSkills.length > 0 ? filteredSkills[0] : searchText;
+            addSkill(skillToAdd);
+        }
+    };
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setShowDropdown(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    return (
+        <div className="space-y-4">
+            <h3 className="text-lg font-medium">Skills</h3>
+
+            {/* Skill Input with Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+                <Label htmlFor="skill-input">Add Skills</Label>
+                <div className="relative mt-2">
+                    <Input
+                        id="skill-input"
+                        value={searchText}
+                        onChange={(e) => {
+                            setSearchText(e.target.value);
+                            setShowDropdown(true);
+                        }}
+                        onFocus={() => setShowDropdown(true)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Type to search or add custom skill..."
+                        className="pr-10"
+                    />
+                    {searchText && (
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                            onClick={() => addSkill(searchText)}
+                        >
+                            <Plus className="h-4 w-4" />
+                        </Button>
+                    )}
+                </div>
+
+                {/* Dropdown */}
+                {showDropdown && (
+                    <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        {searchText && !POPULAR_SKILLS.some(s => s.toLowerCase() === searchText.toLowerCase()) && (
+                            <button
+                                onClick={() => addSkill(searchText)}
+                                className="w-full px-4 py-2 text-left hover:bg-muted text-sm border-b flex items-center gap-2"
+                            >
+                                <Plus className="h-3 w-3" />
+                                Add "{searchText}"
+                            </button>
+                        )}
+                        {filteredSkills.length > 0 ? (
+                            filteredSkills.map((skill, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => addSkill(skill)}
+                                    className="w-full px-4 py-2 text-left hover:bg-muted text-sm"
+                                >
+                                    {skill}
+                                </button>
+                            ))
+                        ) : searchText && filteredSkills.length === 0 ? (
+                            <div className="px-4 py-2 text-sm text-muted-foreground">
+                                No matching skills found
+                            </div>
+                        ) : null}
+                    </div>
+                )}
+            </div>
+
+            {/* Selected Skills Display with Drag and Drop */}
+            {uniqueSelectedSkills.length > 0 && (
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                >
+                    <SortableContext
+                        items={uniqueSelectedSkills}
+                        strategy={rectSortingStrategy}
+                    >
+                        <div className="flex flex-wrap gap-2 p-3 bg-muted/30 rounded-lg border min-h-[50px]">
+                            {uniqueSelectedSkills.map((skill) => (
+                                <SortableSkillBadge
+                                    key={skill}
+                                    skill={skill}
+                                    onRemove={removeSkill}
+                                />
+                            ))}
+                        </div>
+                    </SortableContext>
+                </DndContext>
+            )}
+
+            <p className="text-xs text-muted-foreground">
+                Drag to reorder.
+            </p>
+        </div>
+    );
+}

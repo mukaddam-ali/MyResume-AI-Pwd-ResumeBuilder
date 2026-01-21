@@ -37,7 +37,7 @@ export function FontSelector() {
     };
 
     return (
-        <div className="mb-6 bg-white dark:bg-gray-900 rounded-lg shadow-sm border p-4 flex flex-col justify-between h-full">
+        <div className="mb-6 bg-white dark:bg-black rounded-lg shadow-sm border p-4 flex flex-col justify-between h-full">
             <div className="flex items-center gap-2 mb-2">
                 <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-md text-blue-600 dark:text-blue-400">
                     <Type className="h-4 w-4" />

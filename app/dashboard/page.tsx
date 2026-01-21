@@ -38,8 +38,8 @@ export default function DashboardPage() {
         router.push("/editor");
     };
 
-    const handleDeleteResume = (id: string) => {
-        deleteResume(id);
+    const handleDeleteResume = async (id: string) => {
+        await deleteResume(id);
     };
 
     const handleDuplicateResume = (id: string) => {
@@ -57,7 +57,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="container mx-auto w-full max-w-screen-2xl py-8 px-4 sm:px-6 lg:px-8 space-y-8">
             {/* User Profile Section */}
             {user && (
                 <motion.div
@@ -105,12 +105,12 @@ export default function DashboardPage() {
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground">My Resumes</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">My Resumes</h1>
                     <p className="text-muted-foreground mt-1">
                         Create, edit, and manage your professional resumes.
                     </p>
                 </div>
-                <Button onClick={handleCreateResume} size="lg" className="shadow-lg hover:shadow-xl transition-all">
+                <Button onClick={handleCreateResume} size="lg" className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-all">
                     <Plus className="mr-2 h-5 w-5" />
                     Create New Resume
                 </Button>

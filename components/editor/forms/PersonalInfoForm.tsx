@@ -55,7 +55,7 @@ export function PersonalInfoForm() {
                     <Label htmlFor="linkedin">LinkedIn</Label>
                     <Input id="linkedin" name="linkedin" value={personalInfo.linkedin} onChange={handleChange} placeholder="linkedin.com/in/john" />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="github">GitHub</Label>
                     <Input id="github" name="github" value={personalInfo.github} onChange={handleChange} placeholder="github.com/john" />
                 </div>
@@ -71,7 +71,7 @@ export function PersonalInfoForm() {
 
 
                 {/* Only show Photo Upload for templates that support it */}
-                {['executive', 'designer'].includes(activeResume?.selectedTemplate || '') && (
+                {['executive', 'designer', 'corporate'].includes(activeResume?.selectedTemplate || '') && (
                     <div className="md:col-span-2 space-y-4 border-t pt-4 mt-2">
                         <h3 className="font-semibold text-sm">Profile Picture</h3>
                         <div className="flex flex-col gap-4">
@@ -189,22 +189,39 @@ export function PersonalInfoForm() {
                                         </div>
 
                                         {(personalInfo.photoFilters?.borderWidth || 0) > 0 && (
-                                            <div className="space-y-1 animate-in fade-in slide-in-from-top-1">
-                                                <div className="flex justify-between text-xs">
-                                                    <Label>Border Width</Label>
-                                                    <span className="text-muted-foreground">{personalInfo.photoFilters?.borderWidth}px</span>
+                                            <div className="space-y-3 pt-2">
+                                                <div className="space-y-1 animate-in fade-in slide-in-from-top-1">
+                                                    <div className="flex justify-between text-xs">
+                                                        <Label>Border Width</Label>
+                                                        <span className="text-muted-foreground">{personalInfo.photoFilters?.borderWidth}px</span>
+                                                    </div>
+                                                    <Input
+                                                        type="range"
+                                                        min="1"
+                                                        max="10"
+                                                        step="1"
+                                                        value={personalInfo.photoFilters?.borderWidth || 4}
+                                                        onChange={(e) => setPersonalInfo({
+                                                            photoFilters: { ...personalInfo.photoFilters!, borderWidth: parseInt(e.target.value) }
+                                                        })}
+                                                        className="h-6"
+                                                    />
                                                 </div>
-                                                <Input
-                                                    type="range"
-                                                    min="1"
-                                                    max="10"
-                                                    step="1"
-                                                    value={personalInfo.photoFilters?.borderWidth || 4}
-                                                    onChange={(e) => setPersonalInfo({
-                                                        photoFilters: { ...personalInfo.photoFilters!, borderWidth: parseInt(e.target.value) }
-                                                    })}
-                                                    className="h-6"
-                                                />
+                                                <div className="space-y-1 animate-in fade-in slide-in-from-top-1">
+                                                    <div className="flex justify-between text-xs">
+                                                        <Label>Border Color</Label>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <Input
+                                                            type="color"
+                                                            value={personalInfo.photoFilters?.borderColor || '#ffffff'}
+                                                            onChange={(e) => setPersonalInfo({
+                                                                photoFilters: { ...personalInfo.photoFilters!, borderColor: e.target.value }
+                                                            })}
+                                                            className="h-8 w-full p-1 cursor-pointer"
+                                                        />
+                                                    </div>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -214,6 +231,6 @@ export function PersonalInfoForm() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }

@@ -1,8 +1,6 @@
-
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { generateText } from "ai";
 import { NextResponse } from "next/server";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function POST(req: Request) {
     try {
@@ -14,8 +12,6 @@ export async function POST(req: Request) {
                 { status: 500 }
             );
         }
-
-        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
         let prompt = "";
 
@@ -49,9 +45,14 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Invalid generation type" }, { status: 400 });
         }
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+        const google = createGoogleGenerativeAI({
+            apiKey: process.env.GEMINI_API_KEY
+        });
+
+        const { text } = await generateText({
+            model: google("gemini-2.0-flash"),
+            prompt: prompt,
+        });
 
         return NextResponse.json({ content: text });
 

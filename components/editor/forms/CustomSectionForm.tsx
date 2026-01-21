@@ -117,55 +117,59 @@ export function CustomSectionForm({ sectionId }: CustomSectionFormProps) {
                     >
                         {section.items.map((item) => (
                             <SortableItem key={item.id} id={item.id}>
-                                <div className="space-y-4">
-                                    <div className="flex justify-between items-start">
-                                        <div className="grid gap-2 flex-1 mr-4">
-                                            <Label>Name / Title</Label>
-                                            <Input
-                                                value={item.name}
-                                                onChange={(e) => updateCustomItem(section.id, item.id, { name: e.target.value })}
-                                                placeholder="e.g. Volunteer at Animal Shelter"
-                                            />
-                                        </div>
+                                <Card>
+                                    <CardContent className="pl-10 pt-6 relative">
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 mt-8"
+                                            className="absolute top-2 right-2 text-red-500 hover:text-red-700 hover:bg-red-50"
                                             onClick={() => removeCustomItem(section.id, item.id)}
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </Button>
-                                    </div>
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between items-start">
+                                                <div className="grid gap-2 flex-1 mr-4">
+                                                    <Label>Name / Title</Label>
+                                                    <Input
+                                                        value={item.name}
+                                                        onChange={(e) => updateCustomItem(section.id, item.id, { name: e.target.value })}
+                                                        placeholder="e.g. Volunteer at Animal Shelter"
+                                                    />
+                                                </div>
+                                            </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="grid gap-2">
-                                            <Label>Date / Duration</Label>
-                                            <Input
-                                                value={item.date}
-                                                onChange={(e) => updateCustomItem(section.id, item.id, { date: e.target.value })}
-                                                placeholder="e.g. 2020 - Present"
-                                            />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label>City / Location (Optional)</Label>
-                                            <Input
-                                                value={item.city || ''}
-                                                onChange={(e) => updateCustomItem(section.id, item.id, { city: e.target.value })}
-                                                placeholder="e.g. Austin, TX"
-                                            />
-                                        </div>
-                                    </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="grid gap-2">
+                                                    <Label>Date / Duration</Label>
+                                                    <Input
+                                                        value={item.date}
+                                                        onChange={(e) => updateCustomItem(section.id, item.id, { date: e.target.value })}
+                                                        placeholder="e.g. 2020 - Present"
+                                                    />
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label>City / Location (Optional)</Label>
+                                                    <Input
+                                                        value={item.city || ''}
+                                                        onChange={(e) => updateCustomItem(section.id, item.id, { city: e.target.value })}
+                                                        placeholder="e.g. Austin, TX"
+                                                    />
+                                                </div>
+                                            </div>
 
-                                    <div className="grid gap-2">
-                                        <Label>Description</Label>
-                                        <RichTextarea
-                                            value={item.description}
-                                            onValueChange={(value) => updateCustomItem(section.id, item.id, { description: value })}
-                                            placeholder="Describe your contribution..."
-                                            className="min-h-[100px]"
-                                        />
-                                    </div>
-                                </div>
+                                            <div className="grid gap-2">
+                                                <Label>Description</Label>
+                                                <RichTextarea
+                                                    value={item.description}
+                                                    onValueChange={(value) => updateCustomItem(section.id, item.id, { description: value })}
+                                                    placeholder="Describe your contribution..."
+                                                    className="min-h-[100px]"
+                                                />
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
                             </SortableItem>
                         ))}
                     </SortableContext>

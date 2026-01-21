@@ -50,16 +50,17 @@ import { CSS } from '@dnd-kit/utilities';
 import { CustomSectionForm } from "./forms/CustomSectionForm";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PublicToggle } from "./PublicToggle";
 
 // Update SECTION_LABELS to be a helper function or fallback
 const getSectionLabel = (id: string, customSections: any[], sectionTitles: Record<string, string> = {}) => {
     if (sectionTitles[id]) return sectionTitles[id];
     const fixedLabels: Record<string, string> = {
-        personal: 'Info',
-        education: 'Edu',
-        experience: 'Exp',
-        projects: 'Proj',
-        skills: 'Skill',
+        personal: 'Personal',
+        education: 'Education',
+        experience: 'Professional Experience',
+        projects: 'Projects',
+        skills: 'Skills',
     };
     if (fixedLabels[id]) return fixedLabels[id];
     const custom = customSections?.find(s => s.id === id);
@@ -235,7 +236,7 @@ export function EditorPanel() {
 
     return (
         <div className="h-full flex flex-col bg-background border-r">
-            <div className="py-4 px-6 border-b flex justify-between items-center gap-4">
+            <div className="py-4 px-4 sm:px-6 lg:px-8 border-b flex justify-between items-center gap-4">
                 {activeResume ? (
                     <div className="flex-1 mr-4">
                         <Input
@@ -249,13 +250,15 @@ export function EditorPanel() {
                     <h1 className="text-2xl font-bold">Editor</h1>
                 )}
 
+                <PublicToggle />
+
                 <div
                     className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 text-xs font-medium cursor-help shrink-0"
                     title={
                         !user ? "Log in to save your changes to the cloud" :
                             syncStatus === 'error' ? lastSyncError || 'Sync Error' :
                                 syncStatus === 'idle' ? 'Changes saved to local storage' :
-                                    'Resume is synced to cloud'
+                                    'Resume is auto-saved to cloud'
                     }
                 >
                     {!user ? (
@@ -276,14 +279,14 @@ export function EditorPanel() {
                             }>
                                 {syncStatus === 'idle' ? 'Saved locally' :
                                     syncStatus === 'syncing' ? 'Syncing...' :
-                                        syncStatus === 'synced' ? 'Synced' : 'Sync Error'}
+                                        syncStatus === 'synced' ? 'Auto Saved' : 'Sync Error'}
                             </span>
                         </>
                     )}
                 </div>
             </div>
             <ScrollArea className="flex-1 min-h-0">
-                <div className="py-4 pl-0 pr-4">
+                <div className="py-4 px-4 sm:px-6 lg:px-8">
                     <ResumeScore />
                     <div className="grid grid-cols-2 gap-4 mb-6">
                         <ColorPicker />
@@ -297,7 +300,7 @@ export function EditorPanel() {
                             collisionDetection={closestCenter}
                             onDragEnd={handleDragEnd}
                         >
-                            <TabsList className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5 h-auto gap-2 mb-4 bg-muted/50 p-2 w-full">
+                            <TabsList className="flex overflow-x-auto h-auto gap-2 mb-4 bg-muted/50 p-2 w-full snap-x snap-mandatory scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
                                 <SortableContext
                                     items={sectionOrder}
                                     strategy={horizontalListSortingStrategy}
@@ -306,14 +309,15 @@ export function EditorPanel() {
                                         // Allow deleting everything except Personal Info
                                         const canDelete = sectionId !== 'personal';
                                         return (
-                                            <SortableTabTrigger
-                                                key={sectionId}
-                                                id={sectionId}
-                                                value={sectionId}
-                                                label={getSectionLabel(sectionId, customSections, activeResume?.sectionTitles)}
-                                                onDelete={canDelete ? () => removeSection(sectionId) : undefined}
-                                                onRename={(newTitle) => renameSection(sectionId, newTitle)}
-                                            />
+                                            <div key={sectionId} className="snap-center flex-shrink-0 min-w-[120px]">
+                                                <SortableTabTrigger
+                                                    id={sectionId}
+                                                    value={sectionId}
+                                                    label={getSectionLabel(sectionId, customSections, activeResume?.sectionTitles)}
+                                                    onDelete={canDelete ? () => removeSection(sectionId) : undefined}
+                                                    onRename={(newTitle) => renameSection(sectionId, newTitle)}
+                                                />
+                                            </div>
                                         );
                                     })}
                                 </SortableContext>

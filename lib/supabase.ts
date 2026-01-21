@@ -51,6 +51,41 @@ export type Database = {
           created_at?: string;
         };
       };
+      public_templates: {
+        Row: {
+          id: string;
+          resume_id: string;
+          user_id: string;
+          resume_data: any;
+          resume_name: string;
+          template_type: string;
+          job_title: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          resume_id: string;
+          user_id: string;
+          resume_data: any;
+          resume_name: string;
+          template_type: string;
+          job_title?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          resume_id?: string;
+          user_id?: string;
+          resume_data?: any;
+          resume_name?: string;
+          template_type?: string;
+          job_title?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 };

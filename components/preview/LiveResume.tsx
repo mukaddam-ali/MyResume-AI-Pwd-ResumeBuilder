@@ -16,7 +16,7 @@ const PREMIUM_FONTS = ['lora', 'playfair', 'oswald', 'merriweather', 'jetbrains'
 
 export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
     const { userTier } = useResumeStore();
-    const { personalInfo, education, experience, projects, skills, selectedTemplate, themeColor: customThemeColor, contentScale = 1, isBrandingEnabled = true, fontFamily: fontId = 'inter', sectionScales } = data;
+    const { personalInfo, education, experience, projects, skills, selectedTemplate, themeColor: customThemeColor, contentScale = 1, isBrandingEnabled = true, fontFamily: fontId = 'inter', sectionScales, sectionTitles = {} } = data;
 
     // Map font IDs to CSS font family values
     const FONT_FAMILY_MAP: Record<string, string> = {
@@ -55,7 +55,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                         <div key="education" className={cn("mb-6", selectedTemplate === 'creative' ? "text-white" : "")}>
                             <h3 className={cn("uppercase tracking-widest text-xs font-bold border-b pb-2 mb-4 opacity-80",
                                 selectedTemplate === 'modern' ? "text-white border-white/30" : "border-white/20")}>
-                                Education
+                                {sectionTitles.education || "Education"}
                             </h3>
                             <div className="space-y-4">
                                 {education.map(edu => (
@@ -73,7 +73,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                     if (education.length === 0) return null;
                     return (
                         <div key="education" className="mb-8">
-                            <h3 className="font-bold uppercase tracking-widest text-xs mb-4">Education</h3>
+                            <h3 className="font-bold uppercase tracking-widest text-xs mb-4">{sectionTitles.education || "Education"}</h3>
                             {education.map(edu => (
                                 <div key={edu.id} className="mb-4">
                                     <div className="font-semibold">{edu.school}</div>
@@ -88,7 +88,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                 if (education.length === 0) return null;
                 return selectedTemplate === 'github' ? (
                     <div key="education" className="mb-8">
-                        <h2 className="text-lg font-bold text-[#c9d1d9] mb-4 border-b border-[#30363d] pb-2 inline-block">// Education</h2>
+                        <h2 className="text-lg font-bold text-[#c9d1d9] mb-4 border-b border-[#30363d] pb-2 inline-block">// {sectionTitles.education || "Education"}</h2>
                         {education.map(edu => (
                             <div key={edu.id} className="mb-4">
                                 <div className="text-[#79c0ff] font-bold">{edu.school}</div>
@@ -99,14 +99,16 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                     </div>
                 ) : (
                     <div key="education" className="mb-6">
-                        <h3 className="text-lg font-bold uppercase border-b border-gray-200 pb-1 mb-3" style={{ color: themeColor }}>Education</h3>
-                        {education.map(edu => (
-                            <div key={edu.id} className="mb-2">
-                                <div className="font-bold text-sm">{edu.school}</div>
-                                <div className="text-sm">{edu.degree}</div>
-                                <div className="text-xs text-gray-500">{edu.startDate} – {edu.endDate}</div>
-                            </div>
-                        ))}
+                        <h3 className="text-lg font-bold uppercase border-b border-gray-200 pb-1 mb-3" style={{ color: themeColor }}>{sectionTitles.education || "Education"}</h3>
+                        <div className="flex flex-wrap gap-x-4 gap-y-2">
+                            {education.map(edu => (
+                                <div key={edu.id} className="flex items-baseline gap-1.5">
+                                    <div className="font-bold text-sm">{edu.school}</div>
+                                    <div className="text-sm italic text-gray-700">{edu.degree}</div>
+                                    <div className="text-xs text-gray-500">({edu.startDate} – {edu.endDate})</div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 );
 
@@ -119,7 +121,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                         <div key="skills" className="mb-6">
                             <h3 className={cn("uppercase tracking-widest text-xs font-bold border-b pb-2 mb-4 opacity-80",
                                 selectedTemplate === 'modern' ? "text-white border-white/30" : "border-white/20")}>
-                                Skills
+                                {sectionTitles.skills || "Skills"}
                             </h3>
                             <div className="flex flex-wrap gap-2">
                                 {skills.split(',').map((skill, i) => (
@@ -136,8 +138,14 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                     if (!skills) return null;
                     return (
                         <div key="skills" className="mb-8">
-                            <h3 className="font-bold uppercase tracking-widest text-xs mb-4">Skills</h3>
-                            <p className="text-sm leading-relaxed">{skills}</p>
+                            <h3 className="font-bold uppercase tracking-widest text-xs mb-4">{sectionTitles.skills || "Skills"}</h3>
+                            <div className="flex flex-wrap gap-2 text-xs">
+                                {skills.split(',').map((skill, i) => (
+                                    <span key={i} className="px-2.5 py-1 rounded-full bg-gray-100 border border-gray-200">
+                                        {skill.trim()}
+                                    </span>
+                                ))}
+                            </div>
                         </div>
                     );
                 }
@@ -145,15 +153,21 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                 if (!skills) return null;
                 return selectedTemplate === 'github' ? (
                     <div key="skills" className="mb-8">
-                        <h2 className="text-lg font-bold text-[#c9d1d9] mb-4 border-b border-[#30363d] pb-2 inline-block">// Skills</h2>
+                        <h2 className="text-lg font-bold text-[#c9d1d9] mb-4 border-b border-[#30363d] pb-2 inline-block">// {sectionTitles.skills || "Skills"}</h2>
                         <div className="text-[#8b949e] text-xs leading-loose font-mono">
                             ['{skills.replace(/, /g, "', '")}']
                         </div>
                     </div>
                 ) : (
                     <div key="skills" className="mb-6">
-                        <h3 className="text-lg font-bold uppercase border-b border-gray-200 pb-1 mb-3" style={{ color: themeColor }}>Skills</h3>
-                        <p className="text-sm leading-relaxed">{skills}</p>
+                        <h3 className="text-lg font-bold uppercase border-b border-gray-200 pb-1 mb-3" style={{ color: themeColor }}>{sectionTitles.skills || "Skills"}</h3>
+                        <div className="flex flex-wrap gap-2 text-xs">
+                            {skills.split(',').map((skill, i) => (
+                                <span key={i} className="px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800">
+                                    {skill.trim()}
+                                </span>
+                            ))}
+                        </div>
                     </div>
                 );
 
@@ -163,7 +177,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                     if (experience.length === 0) return null;
                     return (
                         <div key="experience" className="mb-8">
-                            <h3 className="font-bold uppercase tracking-widest text-xs mb-4 border-b border-gray-200 pb-1">Experience</h3>
+                            <h3 className="font-bold uppercase tracking-widest text-xs mb-4 border-b border-gray-200 pb-1">{sectionTitles.experience || "Professional Experience"}</h3>
                             {experience.map(exp => (
                                 <div key={exp.id} className="mb-6">
                                     <div className="flex justify-between items-baseline mb-1">
@@ -181,7 +195,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                     if (experience.length === 0) return null;
                     return (
                         <div key="experience">
-                            <h3 className="text-sm font-bold uppercase tracking-widest mb-6 border-b pb-2" style={{ color: themeColor, borderColor: '#e5e7eb' }}>Experience</h3>
+                            <h3 className="text-sm font-bold uppercase tracking-widest mb-6 border-b pb-2" style={{ color: themeColor, borderColor: '#e5e7eb' }}>{sectionTitles.experience || "Professional Experience"}</h3>
                             <div className="space-y-6">
                                 {experience.map(exp => (
                                     <div key={exp.id} className="relative pl-4 border-l-2 border-gray-100">
@@ -203,7 +217,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                     return (
                         <div key="experience" className="mb-8">
                             <h3 className="text-xl font-black uppercase mb-6 flex items-center gap-2" style={{ color: themeColor }}>
-                                Experience
+                                {sectionTitles.experience || "Professional Experience"}
                             </h3>
                             <div className="space-y-8">
                                 {experience.map(exp => (
@@ -225,7 +239,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                     if (experience.length === 0) return null;
                     return (
                         <div key="experience" className="mb-8">
-                            <h2 className="text-xl font-bold text-[#c9d1d9] mb-4 border-b border-[#30363d] pb-2 inline-block">// Experience</h2>
+                            <h2 className="text-xl font-bold text-[#c9d1d9] mb-4 border-b border-[#30363d] pb-2 inline-block">// {sectionTitles.experience || "Professional Experience"}</h2>
                             <div className="space-y-4">
                                 {experience.map(exp => (
                                     <div key={exp.id} className="border border-[#30363d] bg-[#161b22] p-4 rounded-md">
@@ -245,7 +259,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                 if (experience.length === 0) return null;
                 return (
                     <div key="experience" className="mb-6">
-                        <h3 className="text-lg font-bold uppercase border-b border-gray-200 pb-1 mb-4" style={{ color: themeColor }}>Experience</h3>
+                        <h3 className="text-lg font-bold uppercase border-b border-gray-200 pb-1 mb-4" style={{ color: themeColor }}>{sectionTitles.experience || "Professional Experience"}</h3>
                         <div className="space-y-4">
                             {experience.map(exp => (
                                 <div key={exp.id}>
@@ -267,19 +281,19 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                     if (projects.length === 0) return null;
                     return (
                         <div key="projects" className="mb-8">
-                            <h3 className="font-bold uppercase tracking-widest text-xs mb-4 border-b border-gray-200 pb-1">Projects</h3>
+                            <h3 className="font-bold uppercase tracking-widest text-xs mb-4 border-b border-gray-200 pb-1">{sectionTitles.projects || "Projects"}</h3>
                             {projects.map(proj => (
                                 <div key={proj.id} className="mb-4">
                                     <div className="flex justify-between items-baseline">
-                                        <div className="flex items-center gap-2">
-                                            <h4 className="font-bold">{proj.name}</h4>
-                                            {proj.technologies && (
-                                                <span className="text-[10px] font-semibold bg-gray-100 px-1.5 py-0.5 rounded text-gray-700">
-                                                    {proj.technologies}
-                                                </span>
-                                            )}
-                                        </div>
+                                        <h4 className="font-bold">{proj.name}</h4>
                                     </div>
+                                    {proj.technologies && (
+                                        <div className="mt-1 mb-1">
+                                            <span className="text-[10px] font-semibold bg-gray-100 px-1.5 py-0.5 rounded text-gray-700 inline-block">
+                                                {proj.technologies}
+                                            </span>
+                                        </div>
+                                    )}
                                     <div className="text-sm mt-1 text-gray-600">
                                         <FormattedText text={proj.description} />
                                     </div>
@@ -292,19 +306,19 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                     if (projects.length === 0) return null;
                     return (
                         <div key="projects">
-                            <h3 className="text-sm font-bold uppercase tracking-widest mb-6 border-b pb-2" style={{ color: themeColor, borderColor: '#e5e7eb' }}>Projects</h3>
+                            <h3 className="text-sm font-bold uppercase tracking-widest mb-6 border-b pb-2" style={{ color: themeColor, borderColor: '#e5e7eb' }}>{sectionTitles.projects || "Projects"}</h3>
                             <div className="grid grid-cols-1 gap-4">
                                 {projects.map(proj => (
                                     <div key={proj.id} className="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="font-bold text-gray-900">{proj.name}</h4>
-                                                {proj.technologies && (
+                                        <div className="mb-2">
+                                            <h4 className="font-bold text-gray-900">{proj.name}</h4>
+                                            {proj.technologies && (
+                                                <div className="mt-1.5">
                                                     <span className="text-[10px] bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full font-medium">
                                                         {proj.technologies}
                                                     </span>
-                                                )}
-                                            </div>
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="text-gray-600 text-sm mb-2">
                                             <FormattedText text={proj.description} />
@@ -325,21 +339,21 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                     return (
                         <div key="projects" className="mb-8">
                             <h3 className="text-xl font-black uppercase mb-6 flex items-center gap-2" style={{ color: themeColor }}>
-                                Projects
+                                {sectionTitles.projects || "Projects"}
                             </h3>
                             <div className="grid grid-cols-1 gap-4">
                                 {projects.map(proj => (
                                     <div key={proj.id} className="bg-gray-50 p-4 rounded-lg">
                                         <div className="flex justify-between items-center mb-1">
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="font-bold text-gray-800">{proj.name}</h4>
-                                                {proj.technologies && (
-                                                    <span className="text-[10px] bg-white border border-gray-200 px-2 py-0.5 rounded text-gray-500">
-                                                        {proj.technologies}
-                                                    </span>
-                                                )}
-                                            </div>
+                                            <h4 className="font-bold text-gray-800">{proj.name}</h4>
                                         </div>
+                                        {proj.technologies && (
+                                            <div className="mb-2 mt-0.5">
+                                                <span className="text-[10px] bg-white border border-gray-200 px-2 py-0.5 rounded text-gray-500 inline-block">
+                                                    {proj.technologies}
+                                                </span>
+                                            </div>
+                                        )}
                                         <div className="text-gray-600 text-xs mt-1">
                                             <FormattedText text={proj.description} />
                                         </div>
@@ -353,24 +367,24 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                     if (projects.length === 0) return null;
                     return (
                         <div key="projects" className="mb-8">
-                            <h2 className="text-xl font-bold text-[#c9d1d9] mb-4 border-b border-[#30363d] pb-2 inline-block">// Projects</h2>
+                            <h2 className="text-xl font-bold text-[#c9d1d9] mb-4 border-b border-[#30363d] pb-2 inline-block">// {sectionTitles.projects || "Projects"}</h2>
                             <div className="space-y-4">
                                 {projects.map(proj => (
                                     <div key={proj.id} className="border border-[#30363d] bg-[#161b22] p-4 rounded-md">
                                         <div className="flex justify-between items-baseline mb-1">
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="font-bold text-[#79c0ff]">{proj.name}</h3>
-                                                {proj.technologies && (
-                                                    <span className="text-xs text-[#8b949e] px-2 py-0.5 rounded bg-[#30363d] border border-[#30363d]">
-                                                        {proj.technologies}
-                                                    </span>
-                                                )}
-                                            </div>
+                                            <h3 className="font-bold text-[#79c0ff]">{proj.name}</h3>
                                         </div>
+                                        {proj.technologies && (
+                                            <div className="mb-1">
+                                                <span className="text-xs text-[#8b949e] px-2 py-0.5 rounded bg-[#30363d] border border-[#30363d] inline-block">
+                                                    // {proj.technologies}
+                                                </span>
+                                            </div>
+                                        )}
                                         <div className="text-gray-600 text-xs leading-relaxed mb-2">
                                             <FormattedText text={proj.description} className="text-[#8b949e]" />
                                         </div>
-                                        {proj.link && <a href={proj.link} className="text-[#58a6ff] text-xs hover:underline">{proj.link}</a>}
+                                        {proj.link && <a href={proj.link} className="text-[#58a6ff] text-xs hover:underline">{proj.linkText || proj.link}</a>}
                                     </div>
                                 ))}
                             </div>
@@ -381,21 +395,19 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                 if (projects.length === 0) return null;
                 return (
                     <div key="projects" className="mb-6">
-                        <h3 className="text-lg font-bold uppercase border-b border-gray-200 pb-1 mb-4" style={{ color: themeColor }}>Projects</h3>
+                        <h3 className="text-lg font-bold uppercase border-b border-gray-200 pb-1 mb-4" style={{ color: themeColor }}>{sectionTitles.projects || "Projects"}</h3>
                         <div className="space-y-3">
                             {projects.map(proj => (
                                 <div key={proj.id}>
                                     <div className="flex justify-between font-bold text-sm">
-                                        <div className="flex items-center gap-2">
-                                            <span>{proj.name}</span>
-                                            {proj.technologies && (
-                                                <span className="text-[10px] text-gray-500 font-semibold bg-gray-100 px-1.5 py-0.5 rounded">
-                                                    {proj.technologies}
-                                                </span>
-                                            )}
-                                        </div>
-                                        {proj.link && <a href={proj.link} className="text-blue-600 font-normal hover:underline text-xs">{proj.link}</a>}
+                                        <span>{proj.name}</span>
+                                        {proj.link && <a href={proj.link} className="text-blue-600 font-normal hover:underline text-xs">{proj.linkText || proj.link}</a>}
                                     </div>
+                                    {proj.technologies && (
+                                        <div className="text-xs text-gray-600 italic mb-1">
+                                            {proj.technologies}
+                                        </div>
+                                    )}
                                     <div className="text-sm text-gray-700">
                                         <FormattedText text={proj.description} />
                                     </div>
@@ -541,13 +553,13 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
             {/* Branding - Fixed at Bottom */}
             {isBrandingEnabled && (
                 <div className="absolute bottom-5 left-0 right-0 text-center text-[8px] text-gray-400 font-sans pointer-events-none z-50" style={{ fontFamily: 'Inter, sans-serif' }}>
-                    Powered by MyResume
+                    Powered by LoneStar
                 </div>
             )}
 
             <div style={{
-                width: `${100 / contentScale}%`,
-                transform: `scale(${contentScale})`,
+                width: `${100 / (contentScale || 1)}%`,
+                transform: `scale(${contentScale || 1})`,
                 transformOrigin: 'top left',
                 ...style,
             }} className={cn("flex-1 flex min-h-full relative", className)}>
@@ -565,7 +577,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
         return (
             <ScaledWrapper className="flex text-sm text-gray-800 leading-relaxed font-sans" style={{ fontFamily }}>
                 {/* Sidebar */}
-                <div className="w-[32%] px-10 py-8 text-white flex flex-col gap-8 min-h-full" style={{ backgroundColor: themeColor }}>
+                <div className="w-[32%] px-8 py-8 text-white flex flex-col gap-8 min-h-full" style={{ backgroundColor: themeColor }}>
                     {/* Contact (Fixed) */}
                     <div style={{ zoom: sectionScales?.personal || 1 }}>
                         {(personalInfo.email || personalInfo.phone || personalInfo.location || personalInfo.linkedin || personalInfo.website || personalInfo.github) && (
@@ -615,7 +627,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                 </div>
 
                 {/* Main Content */}
-                <div className="w-[68%] px-12 py-8 pt-12 flex flex-col gap-8">
+                <div className="w-[68%] px-9 py-8 pt-12 flex flex-col gap-8">
                     <div style={{ zoom: sectionScales?.personal || 1 }}>
                         <h1 className="text-4xl font-extrabold uppercase tracking-tight" style={{ color: themeColor }}>{personalInfo.fullName}</h1>
                         {personalInfo.jobTitle && <p className="text-lg text-gray-500 mt-2 font-light">{personalInfo.jobTitle}</p>}
@@ -634,15 +646,18 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
         const rightSections = getMainSections();
 
         return (
-            <ScaledWrapper className="px-16 py-12 text-gray-900 font-serif" style={{ fontFamily }}>
+            <ScaledWrapper className="px-12 py-12 text-gray-900 font-serif" style={{ fontFamily }}>
                 <div className="h-full">
                     <header className="border-b-2 pb-8 mb-8" style={{ borderColor: themeColor, zoom: sectionScales?.personal || 1 }}>
                         <h1 className="text-5xl mb-4 tracking-tighter" style={{ color: themeColor }}>{personalInfo.fullName}</h1>
+                        {personalInfo.jobTitle && <p className="text-xl text-gray-400 mb-6 font-light uppercase tracking-widest">{personalInfo.jobTitle}</p>}
                         <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                             {personalInfo.email && <span>{personalInfo.email}</span>}
                             {personalInfo.phone && <span>• {personalInfo.phone}</span>}
                             {personalInfo.location && <span>• {personalInfo.location}</span>}
-                            {personalInfo.website && <span>• {personalInfo.website}</span>}
+                            {personalInfo.website && <span>• {personalInfo.website.replace(/^https?:\/\/(www\.)?/, '')}</span>}
+                            {personalInfo.linkedin && <span>• {personalInfo.linkedin.replace(/^https?:\/\/(www\.)?/, '')}</span>}
+                            {personalInfo.github && <span>• {personalInfo.github.replace(/^https?:\/\/(www\.)?/, '')}</span>}
                         </div>
                     </header>
 
@@ -669,7 +684,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
     // 3. GitHub Template
     if (selectedTemplate === "github") {
         return (
-            <ScaledWrapper className="bg-[#0d1117] text-[#c9d1d9] font-mono text-sm px-14 py-10" style={{ fontFamily }}>
+            <ScaledWrapper className="bg-[#0d1117] text-[#c9d1d9] font-mono text-sm px-10 py-10" style={{ fontFamily }}>
                 <div className="h-full">
                     <div className="border-b border-[#30363d] pb-6 mb-8" style={{ zoom: sectionScales?.personal || 1 }}>
                         <h1 className="text-3xl font-bold text-[#58a6ff] mb-2">
@@ -678,6 +693,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                         <div className="text-[#8b949e] space-y-1 text-xs">
                             <p>const profile = {"{"}</p>
                             <div className="pl-4">
+                                {personalInfo.jobTitle && <p>role: "<span className="text-[#a5d6ff]">{personalInfo.jobTitle}</span>",</p>}
                                 {personalInfo.email && <p>email: "<span className="text-[#a5d6ff]">{personalInfo.email}</span>",</p>}
                                 {personalInfo.phone && <p>phone: "<span className="text-[#a5d6ff]">{personalInfo.phone}</span>",</p>}
                                 {personalInfo.location && <p>location: "<span className="text-[#a5d6ff]">{personalInfo.location}</span>",</p>}
@@ -701,10 +717,10 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
         const mainSections = getMainSections();
         return (
             <ScaledWrapper className="flex" style={{ fontFamily }}>
-                <div className="w-[35%] px-10 py-8 text-white flex flex-col gap-8 shrink-0 min-h-full" style={{ backgroundColor: themeColor }}>
+                <div className="w-[35%] px-6 py-8 text-white flex flex-col gap-8 shrink-0 min-h-full" style={{ backgroundColor: themeColor }}>
                     <div style={{ zoom: sectionScales?.personal || 1 }}>
                         <div className="mt-4">
-                            <h1 className="text-4xl font-black uppercase leading-none mb-2">{personalInfo.fullName}</h1>
+                            <h1 className={cn("font-black uppercase leading-tight mb-2 break-words", personalInfo.fullName.length > 15 ? "text-3xl" : "text-4xl")}>{personalInfo.fullName}</h1>
                             {personalInfo.jobTitle && <p className="text-sm font-bold tracking-widest uppercase opacity-80">{personalInfo.jobTitle}</p>}
                         </div>
 
@@ -715,8 +731,9 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                                     {personalInfo.email && <div className="break-all">{personalInfo.email}</div>}
                                     {personalInfo.phone && <div>{personalInfo.phone}</div>}
                                     {personalInfo.location && <div>{personalInfo.location}</div>}
-                                    {personalInfo.website && <div className="underline decoration-white/50">{personalInfo.website}</div>}
+                                    {personalInfo.website && <div className="underline decoration-white/50">{personalInfo.website.replace(/^https?:\/\/(www\.)?/, '')}</div>}
                                     {personalInfo.linkedin && <div className="underline decoration-white/50">LinkedIn</div>}
+                                    {personalInfo.github && <div className="underline decoration-white/50">GitHub</div>}
                                 </div>
                             </div>
                         )}
@@ -725,7 +742,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                     {sidebarSections.map(renderSection)}
                 </div>
 
-                <div className="w-[65%] px-14 py-10 pt-16 flex flex-col gap-8">
+                <div className="w-[65%] px-10 py-10 pt-16 flex flex-col gap-8">
                     {personalInfo.summary && (
                         <div style={{ zoom: sectionScales?.personal || 1 }}>
                             <h3 className="text-xl font-black uppercase mb-3 flex items-center gap-2" style={{ color: themeColor }}>
@@ -751,10 +768,29 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
         return (
             <ScaledWrapper className="flex h-full" style={{ fontFamily }}>
                 {/* Left Sidebar - Navy Blue */}
-                <div className="w-[35%] text-white px-6 py-8 flex flex-col min-h-0 overflow-hidden" style={{ backgroundColor: accentColor }}>
+                <div className="w-[35%] text-white px-4.5 py-8 flex flex-col" style={{ backgroundColor: accentColor }}>
                     {/* Photo placeholder - circular */}
-                    <div className="w-32 h-32 rounded-full bg-white/20 mx-auto mb-6 flex items-center justify-center">
-                        <span className="text-5xl font-bold text-white/60">{personalInfo.fullName?.charAt(0) || '?'}</span>
+                    {/* Photo placeholder - circular */}
+                    <div className="mx-auto mb-6 flex items-center justify-center">
+                        {personalInfo.photo ? (
+                            <img
+                                src={personalInfo.photo}
+                                alt={personalInfo.fullName}
+                                className="object-cover rounded-full"
+                                style={{
+                                    width: '128px',
+                                    height: '128px',
+                                    borderWidth: `${personalInfo.photoFilters?.borderWidth || 0}px`,
+                                    borderColor: personalInfo.photoFilters?.borderColor || 'transparent',
+                                    transform: `scale(${personalInfo.photoFilters?.scale || 1})`,
+                                    filter: `brightness(${personalInfo.photoFilters?.brightness || 1}) contrast(${personalInfo.photoFilters?.contrast || 1}) grayscale(${personalInfo.photoFilters?.grayscale || 0})`
+                                }}
+                            />
+                        ) : (
+                            <div className="w-32 h-32 rounded-full bg-white/20 flex items-center justify-center">
+                                <span className="text-5xl font-bold text-white/60">{personalInfo.fullName?.charAt(0) || '?'}</span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Contact Section */}
@@ -783,7 +819,19 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                                 {personalInfo.website && (
                                     <div className="flex items-center gap-2">
                                         <LinkIcon className="w-3 h-3" />
-                                        <span>{personalInfo.website}</span>
+                                        <span>{personalInfo.website.replace(/^https?:\/\/(www\.)?/, '')}</span>
+                                    </div>
+                                )}
+                                {personalInfo.linkedin && (
+                                    <div className="flex items-center gap-2">
+                                        <Linkedin className="w-3 h-3" />
+                                        <span className="truncate">{personalInfo.linkedin.replace(/^https?:\/\/(www\.)?/, '')}</span>
+                                    </div>
+                                )}
+                                {personalInfo.github && (
+                                    <div className="flex items-center gap-2">
+                                        <Github className="w-3 h-3" />
+                                        <span className="truncate">{personalInfo.github.replace(/^https?:\/\/(www\.)?/, '')}</span>
                                     </div>
                                 )}
                             </div>
@@ -794,38 +842,21 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                     {skills && (
                         <div className="mb-6">
                             <h3 className="text-xs uppercase tracking-wider font-bold mb-3 pb-1 border-b border-white/30">Skills</h3>
-                            <div className="space-y-1 text-xs">
+                            <div className="flex flex-wrap gap-2 text-xs">
                                 {skills.split(',').map((skill: string, i: number) => (
-                                    <div key={i} className="py-0.5">{skill.trim()}</div>
+                                    <span key={i} className="px-2.5 py-1 rounded-full bg-white/10 border border-white/20">
+                                        {skill.trim()}
+                                    </span>
                                 ))}
                             </div>
                         </div>
                     )}
 
-                    {/* LinkedIn/GitHub - treat as "Links" */}
-                    {(personalInfo.linkedin || personalInfo.github) && (
-                        <div className="mt-auto">
-                            <h3 className="text-xs uppercase tracking-wider font-bold mb-3 pb-1 border-b border-white/30">Links</h3>
-                            <div className="space-y-2 text-xs">
-                                {personalInfo.linkedin && (
-                                    <div className="flex items-center gap-2">
-                                        <Linkedin className="w-3 h-3" />
-                                        <span className="truncate">{personalInfo.linkedin}</span>
-                                    </div>
-                                )}
-                                {personalInfo.github && (
-                                    <div className="flex items-center gap-2">
-                                        <Github className="w-3 h-3" />
-                                        <span className="truncate">{personalInfo.github}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
+
                 </div>
 
                 {/* Right Content - White */}
-                <div className="w-[65%] bg-gray-50 p-8 min-h-0 overflow-auto">
+                <div className="w-[65%] bg-gray-50 p-6">
                     {/* Header */}
                     <div className="mb-6" style={{ zoom: sectionScales?.personal || 1 }}>
                         <h1 className="text-2xl font-bold tracking-wide" style={{ color: accentColor }}>{personalInfo.fullName}</h1>
@@ -835,7 +866,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                     {/* Summary */}
                     {personalInfo.summary && (
                         <div className="mb-6" style={{ zoom: sectionScales?.personal || 1 }}>
-                            <h3 className="text-sm font-bold uppercase tracking-wider mb-2 pb-1 border-b-2" style={{ color: accentColor, borderColor: accentColor }}>Summary</h3>
+                            <h3 className="text-sm font-bold uppercase tracking-wider mb-2 pb-1 border-b-2 border-gray-300" style={{ color: accentColor }}>Summary</h3>
                             <FormattedText text={personalInfo.summary} className="text-xs text-gray-700 leading-relaxed" />
                         </div>
                     )}
@@ -843,7 +874,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                     {/* Education */}
                     {education.length > 0 && (
                         <div className="mb-6">
-                            <h3 className="text-sm font-bold uppercase tracking-wider mb-2 pb-1 border-b-2" style={{ color: accentColor, borderColor: accentColor }}>Education</h3>
+                            <h3 className="text-sm font-bold uppercase tracking-wider mb-2 pb-1 border-b-2 border-gray-300" style={{ color: accentColor }}>Education</h3>
                             <div className="space-y-3">
                                 {education.map((edu) => (
                                     <div key={edu.id} className="text-xs">
@@ -861,7 +892,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                     {/* Experience */}
                     {experience.length > 0 && (
                         <div className="mb-6">
-                            <h3 className="text-sm font-bold uppercase tracking-wider mb-2 pb-1 border-b-2" style={{ color: accentColor, borderColor: accentColor }}>Work Experience</h3>
+                            <h3 className="text-sm font-bold uppercase tracking-wider mb-2 pb-1 border-b-2 border-gray-300" style={{ color: accentColor }}>Professional Experience</h3>
                             <div className="space-y-4">
                                 {experience.map((exp) => (
                                     <div key={exp.id} className="text-xs">
@@ -880,18 +911,20 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                     {/* Projects */}
                     {projects.length > 0 && (
                         <div className="mb-6">
-                            <h3 className="text-sm font-bold uppercase tracking-wider mb-2 pb-1 border-b-2" style={{ color: accentColor, borderColor: accentColor }}>Projects</h3>
+                            <h3 className="text-sm font-bold uppercase tracking-wider mb-2 pb-1 border-b-2 border-gray-300" style={{ color: accentColor }}>Projects</h3>
                             <div className="space-y-3">
                                 {projects.map((proj) => (
                                     <div key={proj.id} className="text-xs">
                                         <span className="font-semibold text-gray-900">{proj.name}</span>
-                                        <div className="text-gray-500 mt-1">
-                                            {proj.description && <FormattedText text={proj.description} />}
-                                            {proj.technologies && (
-                                                <span className="ml-2 text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded inline-block align-middle">
+                                        {proj.technologies && (
+                                            <div className="mt-1 mb-1">
+                                                <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded inline-block">
                                                     {proj.technologies}
                                                 </span>
-                                            )}
+                                            </div>
+                                        )}
+                                        <div className="text-gray-500 mt-1">
+                                            {proj.description && <FormattedText text={proj.description} />}
                                         </div>
                                     </div>
                                 ))}
@@ -919,7 +952,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
         return (
             <ScaledWrapper className="flex flex-col h-full" style={{ fontFamily }}>
                 {/* Header Bar */}
-                <div className="flex items-center gap-6 px-8 py-6" style={{ backgroundColor: darkGray }}>
+                <div className="flex items-center gap-6 px-6 py-6" style={{ backgroundColor: darkGray }}>
                     {/* Photo placeholder */}
                     {/* Photo placeholder */}
                     <div
@@ -951,7 +984,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                 {/* Main Content Area */}
                 <div className="flex flex-1 min-h-0">
                     {/* Left - Main Content */}
-                    <div className="w-[65%] p-6 overflow-auto bg-white">
+                    <div className="w-[65%] p-4.5 bg-white">
                         {/* Profile/Summary */}
                         {personalInfo.summary && (
                             <div className="mb-5" style={{ zoom: sectionScales?.personal || 1 }}>
@@ -963,7 +996,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                         {/* Experience */}
                         {experience.length > 0 && (
                             <div className="mb-5">
-                                <h3 className="text-sm font-bold uppercase tracking-wider mb-2 pb-1" style={{ color: goldColor, borderBottom: `2px solid ${goldColor}` }}>Work Experience</h3>
+                                <h3 className="text-sm font-bold uppercase tracking-wider mb-2 pb-1" style={{ color: goldColor, borderBottom: `2px solid ${goldColor}` }}>Professional Experience</h3>
                                 <div className="space-y-3">
                                     {experience.map((exp) => (
                                         <div key={exp.id} className="text-xs">
@@ -1008,13 +1041,15 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                                     {projects.map((proj) => (
                                         <div key={proj.id} className="text-xs">
                                             <span className="font-semibold text-gray-900">{proj.name}</span>
-                                            <div className="text-gray-600 mt-1">
-                                                {proj.description && <FormattedText text={proj.description} />}
-                                                {proj.technologies && (
-                                                    <span className="ml-2 text-[10px] border border-gray-200 px-1.5 py-0.5 rounded text-gray-500 inline-block align-middle">
+                                            {proj.technologies && (
+                                                <div className="mt-1 mb-1">
+                                                    <span className="text-[10px] border border-gray-200 px-1.5 py-0.5 rounded text-gray-500 inline-block" style={{ color: goldColor, borderColor: goldColor }}>
                                                         {proj.technologies}
                                                     </span>
-                                                )}
+                                                </div>
+                                            )}
+                                            <div className="text-gray-600 mt-1">
+                                                {proj.description && <FormattedText text={proj.description} />}
                                             </div>
                                         </div>
                                     ))}
@@ -1024,7 +1059,7 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                     </div>
 
                     {/* Right Sidebar */}
-                    <div className="w-[35%] p-6 text-white min-h-0 overflow-hidden" style={{ backgroundColor: darkGray }}>
+                    <div className="w-[35%] p-4.5 text-white" style={{ backgroundColor: darkGray }}>
                         {/* Contact */}
                         {(personalInfo.email || personalInfo.phone || personalInfo.location) && (
                             <div className="mb-5">
@@ -1051,7 +1086,19 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                                     {personalInfo.website && (
                                         <div className="flex items-center gap-2">
                                             <LinkIcon className="w-3 h-3" style={{ color: goldColor }} />
-                                            <span className="truncate">{personalInfo.website}</span>
+                                            <span className="truncate">{personalInfo.website.replace(/^https?:\/\/(www\.)?/, '')}</span>
+                                        </div>
+                                    )}
+                                    {personalInfo.linkedin && (
+                                        <div className="flex items-center gap-2">
+                                            <Linkedin className="w-3 h-3" style={{ color: goldColor }} />
+                                            <span className="truncate">{personalInfo.linkedin.replace(/^https?:\/\/(www\.)?/, '')}</span>
+                                        </div>
+                                    )}
+                                    {personalInfo.github && (
+                                        <div className="flex items-center gap-2">
+                                            <Github className="w-3 h-3" style={{ color: goldColor }} />
+                                            <span className="truncate">{personalInfo.github.replace(/^https?:\/\/(www\.)?/, '')}</span>
                                         </div>
                                     )}
                                 </div>
@@ -1062,37 +1109,18 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
                         {skills && (
                             <div className="mb-5">
                                 <h3 className="text-xs font-bold uppercase tracking-wider mb-3 pb-1" style={{ color: goldColor, borderBottom: `1px solid ${goldColor}` }}>Skills</h3>
-                                <div className="space-y-1.5 text-xs">
-                                    {skills.split(',').slice(0, 8).map((skill: string, i: number) => (
-                                        <div key={i} className="flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: goldColor }} />
-                                            <span>{skill.trim()}</span>
-                                        </div>
+                                <div className="flex flex-wrap gap-2 text-xs">
+                                    {skills.split(',').map((skill: string, i: number) => (
+                                        <span key={i} className="px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800">
+                                            {skill.trim()}
+                                        </span>
                                     ))}
                                 </div>
                             </div>
                         )}
 
                         {/* Links */}
-                        {(personalInfo.linkedin || personalInfo.github) && (
-                            <div className="mb-5">
-                                <h3 className="text-xs font-bold uppercase tracking-wider mb-3 pb-1" style={{ color: goldColor, borderBottom: `1px solid ${goldColor}` }}>Links</h3>
-                                <div className="space-y-2 text-xs">
-                                    {personalInfo.linkedin && (
-                                        <div className="flex items-center gap-2">
-                                            <Linkedin className="w-3 h-3" style={{ color: goldColor }} />
-                                            <span className="truncate">{personalInfo.linkedin}</span>
-                                        </div>
-                                    )}
-                                    {personalInfo.github && (
-                                        <div className="flex items-center gap-2">
-                                            <Github className="w-3 h-3" style={{ color: goldColor }} />
-                                            <span className="truncate">{personalInfo.github}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
+
                     </div>
                 </div>
 
@@ -1105,12 +1133,13 @@ export const LiveResume = ({ data, scale = 1 }: LiveResumeProps) => {
 
     // 9. Classic Template (Default)
     return (
-        <ScaledWrapper className="px-14 py-10 text-gray-800 font-sans" style={{ fontFamily }}>
+        <ScaledWrapper className="px-10 py-10 text-gray-800 font-sans" style={{ fontFamily }}>
             <div className="h-full">
                 <div className="text-center border-b-2 border-gray-300 pb-6 mb-6" style={{ zoom: sectionScales?.personal || 1 }}>
                     <h1 className="text-3xl font-bold uppercase tracking-wide mb-2" style={{ color: themeColor }}>{personalInfo.fullName}</h1>
+                    {personalInfo.jobTitle && <p className="text-lg text-gray-600 mb-2 uppercase tracking-wide">{personalInfo.jobTitle}</p>}
                     <div className="flex justify-center flex-wrap gap-3 text-sm text-gray-600">
-                        {[personalInfo.email, personalInfo.phone, personalInfo.location, personalInfo.linkedin].filter(Boolean).map((item, i) => (
+                        {[personalInfo.email, personalInfo.phone, personalInfo.location, personalInfo.website, personalInfo.linkedin, personalInfo.github].filter(Boolean).map((item, i) => (
                             <span key={i} className={i > 0 ? "border-l border-gray-300 pl-3" : ""}>{item}</span>
                         ))}
                     </div>
